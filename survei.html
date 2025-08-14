@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survei Kendaraan Motor - Siswa & Guru</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .gradient-teacher { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .card-shadow { box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .animate-fade-in { animation: fadeIn 0.6s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .spreadsheet-table { border-collapse: collapse; width: 100%; }
+        .spreadsheet-table th, .spreadsheet-table td { border: 1px solid #d1d5db; padding: 8px; text-align: left; }
+        .spreadsheet-table th { background-color: #f3f4f6; font-weight: 600; }
+        .spreadsheet-table tr:nth-child(even) { background-color: #f9fafb; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Login Screen -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white rounded-lg card-shadow p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2"> Survei Kendaraan Motor - Siswa & Guru</h1>
+                <p class="text-gray-600">Pilih peran Anda untuk melanjutkan</p>
+            </div>
+            
+            <div class="space-y-4">
+                <button onclick="loginAs('student')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
+                    <span></span>
+                    <span>Masuk sebagai Siswa</span>
+                </button>
+                
+                <button onclick="showTeacherLogin()" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
+                    <span></span>
+                    <span>Masuk sebagai Guru</span>
+                </button>
+                
+                <button onclick="showAdminLogin()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
+                    <span></span>
+                    <span>Masuk sebagai Administrator</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher Login Form -->
+    <div id="teacher-login" class="hidden min-h-screen flex items-center justify-center">
+        <div class="bg-white rounded-lg card-shadow p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Login Guru</h2>
+                <p class="text-gray-600">Masukkan kredensial untuk mengakses panel guru</p>
+            </div>
+            
+            <form id="teacher-login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                    <input type="text" id="teacher-username" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent" placeholder="Masukkan username">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" id="teacher-password" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent" placeholder="Masukkan password">
+                </div>
+                <button type="submit" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200">
+                    Login
+                </button>
+                <button type="button" onclick="backToLogin()" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200">
+                    ? Kembali
+                </button>
+            </form>
+            
+            <div class="mt-4 p-3 bg-yellow-50 rounded-lg text-sm text-yellow-800">
+                <strong>Demo:</strong> Username: <code>guru</code>, Password: <code>admin123</code>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Login Form -->
+    <div id="admin-login" class="hidden min-h-screen flex items-center justify-center">
+        <div class="bg-white rounded-lg card-shadow p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Login Administrator</h2>
+                <p class="text-gray-600">Masukkan kredensial untuk mengakses panel administrator</p>
+            </div>
+            
+            <form id="admin-login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                    <input type="text" id="admin-username" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Masukkan username">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" id="admin-password" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Masukkan password">
+                </div>
+                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200">
+                    Login
+                </button>
+                <button type="button" onclick="backToLogin()" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200">
+                    ? Kembali
+                </button>
+            </form>
+            
+            <div class="mt-4 p-3 bg-yellow-50 rounded-lg text-sm text-yellow-800">
+                <strong>Demo:</strong> Username: <code>admin</code>, Password: <code>superadmin123</code>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Interface -->
+    <div id="student-interface" class="hidden">
+        <!-- Header -->
+        <div class="gradient-bg text-white py-6">
+            <div class="container mx-auto px-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold">Survei Oli Motor - Siswa</h1>
+                        <p class="text-lg opacity-90">Isi survei kebutuhan oli motor Anda</p>
+                    </div>
+                    <button onclick="logout()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
+                        Keluar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="container mx-auto px-4 py-8">
+            <div class="bg-white rounded-lg card-shadow p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Form Survei</h2>
+                
+                <form id="student-survey-form" class="space-y-6">
+                    <div id="dynamic-survey-fields">
+                        <!-- Dynamic fields will be loaded here -->
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg">
+                            Kirim Survei
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Interface -->
+    <div id="admin-interface" class="hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-6">
+            <div class="container mx-auto px-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold">Panel Administrator - Survei Oli Motor</h1>
+                        <p class="text-lg opacity-90">Kelola sistem, pengguna, dan integrasi data</p>
+                    </div>
+                    <button onclick="logout()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
+                        Keluar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="container mx-auto px-4 py-8">
+            <!-- Navigation Tabs -->
+            <div class="bg-white rounded-lg card-shadow mb-8 p-1">
+                <div class="flex flex-wrap">
+                    <button onclick="showAdminTab('dashboard')" id="admin-tab-dashboard" class="flex-1 py-3 px-4 text-center font-medium rounded-md transition-all bg-purple-600 text-white">
+                        Dashboard
+                    </button>
+                    <button onclick="showAdminTab('spreadsheet')" id="admin-tab-spreadsheet" class="flex-1 py-3 px-4 text-center font-medium rounded-md transition-all text-gray-600 hover:bg-gray-100">
+                         Spreadsheet
+                    </button>
+                    <button onclick="showAdminTab('users')" id="admin-tab-users" class="flex-1 py-3 px-4 text-center font-medium rounded-md transition-all text-gray-600 hover:bg-gray-100">
+                         Kelola Pengguna
+                    </button>
+                    <button onclick="showAdminTab('system')" id="admin-tab-system" class="flex-1 py-3 px-4 text-center font-medium rounded-md transition-all text-gray-600 hover:bg-gray-100">
+                         Sistem
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div id="admin-dashboard-tab" class="animate-fade-in">
+                <div class="grid md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-lg card-shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Total Survei</h3>
+                                <p class="text-3xl font-bold text-purple-600" id="admin-total-surveys">0</p>
+                            </div>
+                            <div class="text-4xl"></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg card-shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Hari Ini</h3>
+                                <p class="text-3xl font-bold text-blue-600" id="admin-today-surveys">0</p>
+                            </div>
+                            <div class="text-4xl"></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg card-shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Total Guru</h3>
+                                <p class="text-3xl font-bold text-pink-600" id="admin-total-teachers">1</p>
+                            </div>
+                            <div class="text-4xl"></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg card-shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Spreadsheet</h3>
+                                <p class="text-lg font-bold" id="admin-sheets-status">
+                                    <span class="text-green-600">Aktif</span>
+                                </p>
+                            </div>
+                            <div class="text-4xl"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg card-shadow p-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6"> Aktivitas Sistem</h2>
+                    <div id="admin-activity-log" class="space-y-3">
+                        <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded">
+                            <span class="text-green-600">?</span>
+                            <span class="text-sm text-gray-600">Sistem dimulai - Administrator login</span>
+                            <span class="text-xs text-gray-400 ml-auto" id="admin-login-time"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spreadsheet Tab -->
+            <div id="admin-spreadsheet-tab" class="hidden animate-fade-in">
+                <div class="bg-white rounded-lg card-shadow p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800"> Data Spreadsheet Survei</h2>
+                        <div class="space-x-2">
+                            <button onclick="refreshSpreadsheet()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                 Refresh
+                            </button>
+                            <button onclick="exportSpreadsheet()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                 Export CSV
+                            </button>
+                            <button onclick="clearSpreadsheet()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                 Hapus Semua
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4 p-4 bg-blue-50 rounded-lg">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                            <div>
+                                <div class="text-2xl font-bold text-blue-600" id="spreadsheet-total-rows">0</div>
+                                <div class="text-sm text-gray-600">Total Baris</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-green-600" id="spreadsheet-total-columns">0</div>
+                                <div class="text-sm text-gray-600">Total Kolom</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-purple-600" id="spreadsheet-last-updated">-</div>
+                                <div class="text-sm text-gray-600">Terakhir Update</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-orange-600" id="spreadsheet-file-size">0 KB</div>
+                                <div class="text-sm text-gray-600">Ukuran Data</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <div id="spreadsheet-container" class="min-h-[400px] border border-gray-300 rounded-lg">
+                            <div class="flex items-center justify-center h-64 text-gray-500">
+                                <div class="text-center">
+                                    <div class="text-4xl mb-4"></div>
+                                    <p>Data spreadsheet akan muncul di sini</p>
+                                    <p class="text-sm">Klik "Refresh" untuk memuat data terbaru</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div id="admin-users-tab" class="hidden animate-fade-in">
+                <div class="bg-white rounded-lg card-shadow p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800"> Kelola Pengguna</h2>
+                        <button onclick="addNewUser()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            ? Tambah Pengguna
+                        </button>
+                    </div>
+                    
+                    <div id="admin-users-list" class="space-y-4">
+                        <!-- Users list will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Tab -->
+            <div id="admin-system-tab" class="hidden animate-fade-in">
+                <div class="bg-white rounded-lg card-shadow p-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6"> Pengaturan Sistem</h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4">Data Management</h3>
+                            <div class="space-y-3">
+                                <button onclick="backupAllData()" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-left">
+                                     Backup Semua Data
+                                </button>
+                                <button onclick="restoreData()" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors text-left">
+                                     Restore Data
+                                </button>
+                                <button onclick="clearAllSystemData()" class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors text-left">
+                                     Hapus Semua Data
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4">Sistem Info</h3>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span>Versi Sistem:</span>
+                                    <span class="font-mono">v2.1.0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Total Storage:</span>
+                                    <span id="storage-usage">Menghitung...</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Browser:</span>
+                                    <span id="browser-info">Mendeteksi...</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Waktu Aktif:</span>
+                                    <span id="uptime">0 menit</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 p-4 bg-red-50 rounded-lg">
+                        <h4 class="font-semibold text-red-800 mb-2"> Zona Bahaya</h4>
+                        <p class="text-sm text-red-700 mb-3">Aksi di bawah ini akan menghapus data secara permanen!</p>
+                        <button onclick="resetSystem()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                             Reset Sistem Lengkap
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher Interface -->
+    <div id="teacher-interface" class="hidden">
+        <!-- Header -->
+        <div class="gradient-teacher text-white py-6">
+            <div class="container mx-auto px-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold"> Survei Oli Motor - Guru</h1>
+                        <p class="text-lg opacity-90">Isi survei kebutuhan oli motor khusus untuk guru</p>
+                    </div>
+                    <button onclick="logout()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
+                         Keluar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="container mx-auto px-4 py-8">
+            <div class="bg-white rounded-lg card-shadow p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6"> Form Survei Khusus Guru</h2>
+                
+                <form id="teacher-survey-form" class="space-y-6">
+                    <div id="teacher-dynamic-survey-fields">
+                        <!-- Dynamic fields will be loaded here -->
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="bg-pink-600 hover:bg-pink-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg">
+                             Kirim Survei Guru
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        // Global variables
+        let currentUser = null;
+        let surveyData = JSON.parse(localStorage.getItem('surveyData')) || [];
+        let surveyTemplate = JSON.parse(localStorage.getItem('surveyTemplate')) || getDefaultTemplate();
+        let adminStartTime = Date.now();
+
+        // Default survey template for students
+        function getDefaultTemplate() {
+            return [
+                {
+                    id: 'personal',
+                    title: 'Data Pribadi',
+                    color: 'blue',
+                    icon: '',
+                    description: 'Informasi dasar tentang responden',
+                    fields: [
+                        { name: 'nama', label: 'Nama Lengkap', type: 'text', required: true, placeholder: 'Masukkan nama lengkap Anda' },
+                        { name: 'nis', label: 'NIS/NIM', type: 'text', required: true, placeholder: 'Nomor Induk Siswa/Mahasiswa' },
+                        { name: 'kelas', label: 'Kelas/Jurusan', type: 'text', required: true, placeholder: 'Contoh: XII IPA 1, Teknik Mesin' },
+                        { name: 'umur', label: 'Umur', type: 'number', required: true, min: 15, max: 30, placeholder: 'Umur dalam tahun' }
+                    ]
+                },
+                {
+                    id: 'vehicle',
+                    title: 'Data Kendaraan Motor',
+                    color: 'green',
+                    icon: '',
+                    description: 'Informasi tentang motor yang digunakan',
+                    fields: [
+                        { name: 'merk', label: 'Merk Motor', type: 'select', required: true, options: ['Honda', 'Yamaha', 'Suzuki', 'Kawasaki', 'TVS', 'Lainnya'] },
+                        { name: 'tipe', label: 'Tipe/Model', type: 'text', required: true, placeholder: 'Contoh: Vario 125, NMAX, Scoopy' },
+                        { name: 'tahun', label: 'Tahun Pembuatan', type: 'number', required: true, min: 2000, max: 2024, placeholder: 'Tahun pembuatan motor' },
+                        { name: 'cc', label: 'Kapasitas Mesin (CC)', type: 'select', required: true, options: ['110-125 CC', '150-160 CC', '200-250 CC', '>250 CC'] }
+                    ]
+                },
+                {
+                    id: 'usage',
+                    title: 'Kebiasaan Penggunaan Motor',
+                    color: 'yellow',
+                    icon: '',
+                    description: 'Pola penggunaan motor sehari-hari',
+                    fields: [
+                        { name: 'jarak_harian', label: 'Jarak Tempuh per Hari (KM)', type: 'select', required: true, options: ['Kurang dari 10 KM', '10-20 KM', '20-50 KM', 'Lebih dari 50 KM'] },
+                        { name: 'frekuensi', label: 'Frekuensi Penggunaan', type: 'select', required: true, options: ['Setiap hari', '5-6 hari/minggu', '3-4 hari/minggu', '1-2 hari/minggu'] },
+                        { name: 'kondisi_jalan', label: 'Kondisi Jalan yang Sering Dilalui', type: 'select', required: true, options: ['Jalan raya mulus', 'Jalan kota macet', 'Jalan tanjakan/turunan', 'Jalan berbatu/rusak'] },
+                        { name: 'gaya_berkendara', label: 'Gaya Berkendara', type: 'select', required: true, options: ['Santai/pelan', 'Normal', 'Agresif/cepat'] }
+                    ]
+                },
+                {
+                    id: 'oil',
+                    title: 'Kebiasaan Perawatan Oli',
+                    color: 'purple',
+                    icon: '',
+                    description: 'Kebiasaan dalam perawatan dan penggantian oli',
+                    fields: [
+                        { name: 'merk_oli', label: 'Merk Oli yang Biasa Digunakan', type: 'text', required: true, placeholder: 'Contoh: Castrol, Shell, Yamalube, Motul' },
+                        { name: 'jenis_oli', label: 'Jenis Oli', type: 'select', required: true, options: ['Mineral', 'Semi Sintetik', 'Full Sintetik', 'Tidak tahu'] },
+                        { name: 'frekuensi_ganti', label: 'Frekuensi Ganti Oli', type: 'select', required: true, options: ['Setiap 1000 KM', 'Setiap 2000 KM', 'Setiap 3000 KM', 'Setiap 4000+ KM', 'Tidak teratur'] },
+                             ]
+                },
+                {
+                    id: 'problems',
+                    title: 'Masalah dan Preferensi',
+                    color: 'red',
+                    icon: '',
+                    description: 'Masalah yang dialami dan preferensi dalam memilih oli',
+                    fields: [
+                        { name: 'masalah', label: 'Masalah yang Sering Dialami', type: 'checkbox', required: false, options: ['Oli cepat habis', 'Mesin panas', 'Suara mesin kasar', 'Oli mengental', 'Tidak ada masalah'] },
+                        { name: 'faktor_penting', label: 'Faktor Penting dalam Memilih Oli', type: 'select', required: true, options: ['Harga murah', 'Kualitas terbaik', 'Rekomendasi mekanik', 'Merk terkenal', 'Sesuai manual motor'] },
+                        { name: 'komentar', label: 'Saran atau Komentar Tambahan', type: 'textarea', required: false, placeholder: 'Tuliskan saran, pengalaman, atau komentar Anda tentang penggunaan oli motor...' }
+                    ]
+                }
+            ];
+        }
+
+        // Survey template for teachers
+        function getTeacherTemplate() {
+            return [
+                {
+                    id: 'personal',
+                    title: 'Data Pribadi Guru',
+                    color: 'pink',
+                    icon: '',
+                    description: 'Informasi dasar tentang guru responden',
+                    fields: [
+                        { name: 'nama', label: 'Nama Lengkap', type: 'text', required: true, placeholder: 'Masukkan nama lengkap Anda' },
+                        { name: 'nip', label: 'NIP (Nomor Induk Pegawai)', type: 'text', required: true, placeholder: 'Nomor Induk Pegawai' },
+                        { name: 'mata_pelajaran', label: 'Mata Pelajaran', type: 'text', required: true, placeholder: 'Contoh: Matematika, Fisika, Bahasa Indonesia' },
+                        { name: 'pengalaman_mengajar', label: 'Pengalaman Mengajar', type: 'select', required: true, options: ['1-5 tahun', '6-10 tahun', '11-15 tahun', '16-20 tahun', 'Lebih dari 20 tahun'] }
+                    ]
+                },
+                {
+                    id: 'vehicle',
+                    title: 'Data Kendaraan Motor Guru',
+                    color: 'green',
+                    icon: '',
+                    description: 'Informasi tentang motor yang digunakan untuk perjalanan ke sekolah',
+                    fields: [
+                        { name: 'merk', label: 'Merk Motor', type: 'select', required: true, options: ['Honda', 'Yamaha', 'Suzuki', 'Kawasaki', 'TVS', 'Lainnya'] },
+                        { name: 'tipe', label: 'Tipe/Model', type: 'text', required: true, placeholder: 'Contoh: Vario 125, NMAX, PCX, Beat' },
+                        { name: 'tahun', label: 'Tahun Pembuatan', type: 'number', required: true, min: 2000, max: 2024, placeholder: 'Tahun pembuatan motor' },
+                        { name: 'cc', label: 'Kapasitas Mesin (CC)', type: 'select', required: true, options: ['110-125 CC', '150-160 CC', '200-250 CC', '>250 CC'] },
+                        { name: 'kepemilikan', label: 'Status Kepemilikan', type: 'select', required: true, options: ['Milik pribadi', 'Milik keluarga', 'Kredit/Cicilan', 'Sewa/Pinjam'] }
+                    ]
+                },
+                {
+                    id: 'usage',
+                    title: 'Kebiasaan Penggunaan Motor untuk Mengajar',
+                    color: 'yellow',
+                    icon: '',
+                    description: 'Pola penggunaan motor untuk aktivitas mengajar dan sekolah',
+                    fields: [
+                        { name: 'jarak_rumah_sekolah', label: 'Jarak Rumah ke Sekolah (KM)', type: 'select', required: true, options: ['Kurang dari 5 KM', '5-10 KM', '10-20 KM', '20-30 KM', 'Lebih dari 30 KM'] },
+                        { name: 'frekuensi_ke_sekolah', label: 'Frekuensi ke Sekolah per Minggu', type: 'select', required: true, options: ['5 hari (Senin-Jumat)', '6 hari (Senin-Sabtu)', '7 hari (termasuk ekstrakurikuler)', 'Tidak tentu'] },
+                        { name: 'aktivitas_tambahan', label: 'Aktivitas Tambahan dengan Motor', type: 'checkbox', required: false, options: ['Les privat', 'Rapat sekolah', 'Pelatihan guru', 'Kegiatan ekstrakurikuler', 'Tidak ada'] },
+                        { name: 'kondisi_jalan', label: 'Kondisi Jalan ke Sekolah', type: 'select', required: true, options: ['Jalan raya mulus', 'Jalan kota macet', 'Jalan tanjakan/turunan', 'Jalan pedesaan', 'Campuran'] },
+                        { name: 'waktu_perjalanan', label: 'Waktu Perjalanan ke Sekolah', type: 'select', required: true, options: ['Kurang dari 15 menit', '15-30 menit', '30-45 menit', '45-60 menit', 'Lebih dari 1 jam'] }
+                    ]
+                },
+                {
+                    id: 'oil',
+                    title: 'Kebiasaan Perawatan Oli Motor Guru',
+                    color: 'purple',
+                    icon: '',
+                    description: 'Kebiasaan dalam perawatan dan penggantian oli sebagai guru',
+                    fields: [
+                        { name: 'merk_oli', label: 'Merk Oli yang Biasa Digunakan', type: 'text', required: true, placeholder: 'Contoh: Castrol, Shell, Yamalube, Motul, Enduro' },
+                        { name: 'jenis_oli', label: 'Jenis Oli', type: 'select', required: true, options: ['Mineral', 'Semi Sintetik', 'Full Sintetik', 'Tidak tahu'] },
+                        { name: 'frekuensi_ganti', label: 'Frekuensi Ganti Oli', type: 'select', required: true, options: ['Setiap 1000 KM', 'Setiap 2000 KM', 'Setiap 3000 KM', 'Setiap 4000+ KM', 'Berdasarkan bulan (1-2 bulan)', 'Tidak teratur'] },
+                        { name: 'budget_oli', label: 'Budget Oli per Bulan', type: 'select', required: true, options: ['Kurang dari Rp 75.000', 'Rp 75.000 - 150.000', 'Rp 150.000 - 250.000', 'Lebih dari Rp 250.000'] },
+                        { name: 'tempat_ganti_oli', label: 'Tempat Biasa Ganti Oli', type: 'select', required: true, options: ['Bengkel resmi', 'Bengkel langganan', 'Ganti sendiri', 'Bengkel terdekat sekolah', 'Bervariasi'] }
+                    ]
+                },
+                {
+                    id: 'problems',
+                    title: 'Masalah dan Preferensi Guru',
+                    color: 'red',
+                    icon: '',
+                    description: 'Masalah yang dialami dan preferensi dalam memilih oli sebagai guru',
+                    fields: [
+                        { name: 'masalah', label: 'Masalah yang Sering Dialami', type: 'checkbox', required: false, options: ['Oli cepat habis karena sering dipakai', 'Mesin panas saat macet', 'Suara mesin kasar', 'Oli mengental', 'Performa menurun saat hujan', 'Tidak ada masalah'] },
+                        { name: 'faktor_penting', label: 'Faktor Penting dalam Memilih Oli', type: 'select', required: true, options: ['Harga terjangkau dengan gaji guru', 'Kualitas tahan lama', 'Rekomendasi bengkel', 'Merk terpercaya', 'Cocok untuk perjalanan harian', 'Mudah didapat'] },
+                        { name: 'pengaruh_cuaca', label: 'Pengaruh Cuaca terhadap Performa Motor', type: 'select', required: true, options: ['Sangat berpengaruh', 'Cukup berpengaruh', 'Sedikit berpengaruh', 'Tidak berpengaruh'] },
+                        { name: 'saran_siswa', label: 'Apakah Anda memberikan saran tentang perawatan motor kepada siswa?', type: 'select', required: true, options: ['Sering memberikan saran', 'Kadang-kadang', 'Jarang', 'Tidak pernah'] },
+                        { name: 'komentar', label: 'Saran atau Pengalaman sebagai Guru Pengguna Motor', type: 'textarea', required: false, placeholder: 'Bagikan pengalaman Anda sebagai guru dalam menggunakan motor untuk mengajar, tips perawatan, atau saran untuk sesama guru...' }
+                    ]
+                }
+            ];
+        }
+
+        // Login functions
+        function loginAs(role) {
+            if (role === 'student') {
+                currentUser = { role: 'student' };
+                showInterface('student');
+                loadStudentSurvey();
+            }
+        }
+
+        function showTeacherLogin() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('teacher-login').classList.remove('hidden');
+        }
+
+        function showAdminLogin() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('admin-login').classList.remove('hidden');
+        }
+
+        function backToLogin() {
+            document.getElementById('teacher-login').classList.add('hidden');
+            document.getElementById('admin-login').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+        }
+
+        // Teacher login form
+        document.getElementById('teacher-login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('teacher-username').value;
+            const password = document.getElementById('teacher-password').value;
+            
+            if (username === 'guru' && password === 'admin123') {
+                currentUser = { role: 'teacher', username: username };
+                showInterface('teacher');
+                loadTeacherSurvey();
+            } else {
+                alert('? Username atau password salah!');
+            }
+        });
+
+        // Admin login form
+        document.getElementById('admin-login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('admin-username').value;
+            const password = document.getElementById('admin-password').value;
+            
+            if (username === 'admin' && password === 'superadmin123') {
+                currentUser = { 
+                    role: 'admin', 
+                    username: username,
+                    loginTime: new Date()
+                };
+                
+                showInterface('admin');
+                loadAdminDashboard();
+            } else {
+                alert('? Username atau password salah!');
+            }
+        });
+
+        function logout() {
+            currentUser = null;
+            showInterface('login');
+        }
+
+        function showInterface(type) {
+            // Hide all interfaces
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('teacher-login').classList.add('hidden');
+            document.getElementById('admin-login').classList.add('hidden');
+            document.getElementById('student-interface').classList.add('hidden');
+            document.getElementById('teacher-interface').classList.add('hidden');
+            document.getElementById('admin-interface').classList.add('hidden');
+
+            // Show selected interface
+            if (type === 'login') {
+                document.getElementById('login-screen').classList.remove('hidden');
+            } else if (type === 'student') {
+                document.getElementById('student-interface').classList.remove('hidden');
+            } else if (type === 'teacher') {
+                document.getElementById('teacher-interface').classList.remove('hidden');
+            } else if (type === 'admin') {
+                document.getElementById('admin-interface').classList.remove('hidden');
+            }
+        }
+
+        // Student survey functions
+        function loadStudentSurvey() {
+            const container = document.getElementById('dynamic-survey-fields');
+            let html = '';
+
+            surveyTemplate.forEach(section => {
+                html += `
+                    <div class="bg-${section.color}-50 p-6 rounded-lg border border-${section.color}-200">
+                        <div class="flex items-center mb-3">
+                            <span class="text-2xl mr-3">${section.icon || ''}</span>
+                            <div>
+                                <h3 class="text-lg font-semibold text-${section.color}-800">${section.title}</h3>
+                                <p class="text-sm text-${section.color}-600">${section.description || ''}</p>
+                            </div>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4">
+                `;
+
+                section.fields.forEach(field => {
+                    html += generateFieldHTML(field);
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Teacher survey functions
+        function loadTeacherSurvey() {
+            const container = document.getElementById('teacher-dynamic-survey-fields');
+            const teacherTemplate = getTeacherTemplate();
+            let html = '';
+
+            teacherTemplate.forEach(section => {
+                html += `
+                    <div class="bg-${section.color}-50 p-6 rounded-lg border border-${section.color}-200">
+                        <div class="flex items-center mb-3">
+                            <span class="text-2xl mr-3">${section.icon || ''}</span>
+                            <div>
+                                <h3 class="text-lg font-semibold text-${section.color}-800">${section.title}</h3>
+                                <p class="text-sm text-${section.color}-600">${section.description || ''}</p>
+                            </div>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-4">
+                `;
+
+                section.fields.forEach(field => {
+                    html += generateFieldHTML(field);
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function generateFieldHTML(field) {
+            let html = `
+                <div ${field.type === 'checkbox' ? 'class="md:col-span-2"' : ''}>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">${field.label}</label>
+            `;
+
+            if (field.type === 'text' || field.type === 'number') {
+                html += `<input type="${field.type}" name="${field.name}" ${field.required ? 'required' : ''} 
+                         ${field.min ? `min="${field.min}"` : ''} ${field.max ? `max="${field.max}"` : ''}
+                         ${field.placeholder ? `placeholder="${field.placeholder}"` : ''}
+                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">`;
+            } else if (field.type === 'select') {
+                html += `<select name="${field.name}" ${field.required ? 'required' : ''} class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                         <option value="">Pilih ${field.label}</option>`;
+                field.options.forEach(option => {
+                    html += `<option value="${option}">${option}</option>`;
+                });
+                html += `</select>`;
+            } else if (field.type === 'textarea') {
+                html += `<textarea name="${field.name}" ${field.required ? 'required' : ''} rows="3" 
+                         ${field.placeholder ? `placeholder="${field.placeholder}"` : ''}
+                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>`;
+            } else if (field.type === 'checkbox') {
+                html += `<div class="grid md:grid-cols-2 gap-2">`;
+                field.options.forEach(option => {
+                    html += `
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" name="${field.name}[]" value="${option}" class="rounded text-blue-600">
+                            <span class="text-sm">${option}</span>
+                        </label>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            html += `</div>`;
+            return html;
+        }
+
+        // Student form submission - SAVE TO SPREADSHEET
+        document.getElementById('student-survey-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {};
+            
+            // Process form data including checkbox arrays
+            for (let [key, value] of formData.entries()) {
+                if (key.endsWith('[]')) {
+                    const cleanKey = key.replace('[]', '');
+                    if (!data[cleanKey]) data[cleanKey] = [];
+                    data[cleanKey].push(value);
+                } else {
+                    data[key] = value;
+                }
+            }
+            
+            // Convert arrays to strings for spreadsheet
+            Object.keys(data).forEach(key => {
+                if (Array.isArray(data[key])) {
+                    data[key] = data[key].join(', ');
+                }
+            });
+            
+            data.timestamp = new Date().toISOString();
+            data.id = Date.now();
+            data.tanggal = new Date().toLocaleDateString('id-ID');
+            data.waktu = new Date().toLocaleTimeString('id-ID');
+            
+            // Save to spreadsheet data
+            surveyData.push(data);
+            localStorage.setItem('surveyData', JSON.stringify(surveyData));
+            
+            // Auto-save to spreadsheet format
+            saveToSpreadsheet(data);
+            
+            alert('? Survei berhasil dikirim dan tersimpan ke spreadsheet! Terima kasih atas partisipasinya.');
+            this.reset();
+        });
+
+        // Teacher form submission - SAVE TO SPREADSHEET
+        document.getElementById('teacher-survey-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {};
+            
+            // Process form data including checkbox arrays
+            for (let [key, value] of formData.entries()) {
+                if (key.endsWith('[]')) {
+                    const cleanKey = key.replace('[]', '');
+                    if (!data[cleanKey]) data[cleanKey] = [];
+                    data[cleanKey].push(value);
+                } else {
+                    data[key] = value;
+                }
+            }
+            
+            // Convert arrays to strings for spreadsheet
+            Object.keys(data).forEach(key => {
+                if (Array.isArray(data[key])) {
+                    data[key] = data[key].join(', ');
+                }
+            });
+            
+            data.timestamp = new Date().toISOString();
+            data.id = Date.now();
+            data.tanggal = new Date().toLocaleDateString('id-ID');
+            data.waktu = new Date().toLocaleTimeString('id-ID');
+            data.role = 'guru'; // Mark as teacher response
+            
+            // Save to spreadsheet data
+            surveyData.push(data);
+            localStorage.setItem('surveyData', JSON.stringify(surveyData));
+            
+            // Auto-save to spreadsheet format
+            saveToSpreadsheet(data);
+            
+            alert('? Survei guru berhasil dikirim dan tersimpan ke spreadsheet! Terima kasih atas partisipasinya.');
+            this.reset();
+        });
+
+        // Spreadsheet functions
+        function saveToSpreadsheet(data) {
+            // This function automatically saves survey data to spreadsheet format
+            const spreadsheetData = JSON.parse(localStorage.getItem('spreadsheetData')) || [];
+            spreadsheetData.push(data);
+            localStorage.setItem('spreadsheetData', JSON.stringify(spreadsheetData));
+            
+            // Update spreadsheet metadata
+            const metadata = {
+                lastUpdated: new Date().toISOString(),
+                totalRows: spreadsheetData.length,
+                totalColumns: Object.keys(data).length,
+                fileSize: JSON.stringify(spreadsheetData).length
+            };
+            localStorage.setItem('spreadsheetMetadata', JSON.stringify(metadata));
+        }
+
+        function generateSpreadsheetHTML(data) {
+            if (!data || data.length === 0) {
+                return `
+                    <div class="flex items-center justify-center h-64 text-gray-500">
+                        <div class="text-center">
+                            <div class="text-4xl mb-4"></div>
+                            <p>Belum ada data survei</p>
+                            <p class="text-sm">Data akan muncul setelah siswa mengisi survei</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Get all unique keys for headers
+            const allKeys = new Set();
+            data.forEach(row => {
+                Object.keys(row).forEach(key => allKeys.add(key));
+            });
+            const headers = Array.from(allKeys);
+
+            let html = `
+                <table class="spreadsheet-table w-full">
+                    <thead>
+                        <tr>
+                            <th class="w-12">#</th>
+            `;
+            
+            headers.forEach(header => {
+                html += `<th class="min-w-32">${header.replace(/_/g, ' ').toUpperCase()}</th>`;
+            });
+            
+            html += `
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            data.forEach((row, index) => {
+                html += `<tr>`;
+                html += `<td class="text-center font-medium">${index + 1}</td>`;
+                
+                headers.forEach(header => {
+                    const value = row[header] || '';
+                    const displayValue = typeof value === 'string' && value.length > 50 
+                        ? value.substring(0, 50) + '...' 
+                        : value;
+                    html += `<td title="${value}">${displayValue}</td>`;
+                });
+                
+                html += `</tr>`;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+
+            return html;
+        }
+
+        function refreshSpreadsheet() {
+            const spreadsheetData = JSON.parse(localStorage.getItem('spreadsheetData')) || surveyData;
+            const metadata = JSON.parse(localStorage.getItem('spreadsheetMetadata')) || {};
+            
+            // Update metadata display
+            document.getElementById('spreadsheet-total-rows').textContent = spreadsheetData.length;
+            document.getElementById('spreadsheet-total-columns').textContent = spreadsheetData.length > 0 ? Object.keys(spreadsheetData[0]).length : 0;
+            document.getElementById('spreadsheet-last-updated').textContent = metadata.lastUpdated ? new Date(metadata.lastUpdated).toLocaleString('id-ID') : '-';
+            document.getElementById('spreadsheet-file-size').textContent = metadata.fileSize ? Math.round(metadata.fileSize / 1024) + ' KB' : '0 KB';
+            
+            // Generate and display spreadsheet
+            const container = document.getElementById('spreadsheet-container');
+            container.innerHTML = generateSpreadsheetHTML(spreadsheetData);
+        }
+
+        function refreshTeacherSpreadsheet() {
+            const container = document.getElementById('teacher-spreadsheet-container');
+            container.innerHTML = generateSpreadsheetHTML(surveyData);
+        }
+
+        function exportSpreadsheet() {
+            const spreadsheetData = JSON.parse(localStorage.getItem('spreadsheetData')) || surveyData;
+            if (spreadsheetData.length === 0) {
+                alert('Tidak ada data untuk diekspor');
+                return;
+            }
+
+            const csvContent = convertToCSV(spreadsheetData);
+            downloadCSV(csvContent, 'spreadsheet_survei_oli_motor');
+        }
+
+        function exportTeacherSpreadsheet() {
+            if (surveyData.length === 0) {
+                alert('Tidak ada data untuk diekspor');
+                return;
+            }
+
+            const csvContent = convertToCSV(surveyData);
+            downloadCSV(csvContent, 'teacher_spreadsheet_survei_oli_motor');
+        }
+
+        function clearSpreadsheet() {
+            if (confirm('Hapus SEMUA data spreadsheet? Tindakan ini tidak dapat dibatalkan!')) {
+                localStorage.removeItem('spreadsheetData');
+                localStorage.removeItem('spreadsheetMetadata');
+                surveyData = [];
+                localStorage.setItem('surveyData', JSON.stringify(surveyData));
+                refreshSpreadsheet();
+                alert('? Semua data spreadsheet berhasil dihapus!');
+            }
+        }
+
+        function convertToCSV(data) {
+            if (data.length === 0) return '';
+            
+            const headers = Object.keys(data[0]);
+            const csvRows = [headers.join(',')];
+            
+            data.forEach(row => {
+                const values = headers.map(header => {
+                    const value = row[header] || '';
+                    // Escape quotes and wrap in quotes if contains comma
+                    return `"${String(value).replace(/"/g, '""')}"`;
+                });
+                csvRows.push(values.join(','));
+            });
+            
+            return csvRows.join('\n');
+        }
+
+        function downloadCSV(csvContent, filename) {
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename + '_' + new Date().toISOString().split('T')[0] + '.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+
+
+        // Admin functions
+        function loadAdminDashboard() {
+            document.getElementById('admin-total-surveys').textContent = surveyData.length;
+            
+            const today = new Date().toDateString();
+            const todaySurveys = surveyData.filter(item => 
+                new Date(item.timestamp).toDateString() === today
+            ).length;
+            document.getElementById('admin-today-surveys').textContent = todaySurveys;
+            
+            document.getElementById('admin-login-time').textContent = new Date().toLocaleTimeString('id-ID');
+            
+            updateSystemInfo();
+            setInterval(updateUptime, 60000);
+        }
+
+        function showAdminTab(tabName) {
+            // Hide all tabs
+            document.getElementById('admin-dashboard-tab').classList.add('hidden');
+            document.getElementById('admin-spreadsheet-tab').classList.add('hidden');
+            document.getElementById('admin-users-tab').classList.add('hidden');
+            document.getElementById('admin-system-tab').classList.add('hidden');
+
+            // Show selected tab
+            document.getElementById('admin-' + tabName + '-tab').classList.remove('hidden');
+
+            // Update tab buttons
+            document.querySelectorAll('[id^="admin-tab-"]').forEach(btn => {
+                btn.classList.remove('bg-purple-600', 'text-white');
+                btn.classList.add('text-gray-600', 'hover:bg-gray-100');
+            });
+            
+            document.getElementById('admin-tab-' + tabName).classList.add('bg-purple-600', 'text-white');
+            document.getElementById('admin-tab-' + tabName).classList.remove('text-gray-600', 'hover:bg-gray-100');
+
+            if (tabName === 'spreadsheet') {
+                refreshSpreadsheet();
+            } else if (tabName === 'users') {
+                loadUsersList();
+            }
+        }
+
+        function loadUsersList() {
+            const usersList = document.getElementById('admin-users-list');
+            const users = [
+                { username: 'guru', role: 'teacher', status: 'active', lastLogin: 'Hari ini' },
+                { username: 'admin', role: 'admin', status: 'active', lastLogin: 'Sekarang' }
+            ];
+
+            let html = '';
+            users.forEach(user => {
+                html += `
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h4 class="font-semibold">${user.username}</h4>
+                                <p class="text-sm text-gray-600">Role: ${user.role} | Status: ${user.status}</p>
+                                <p class="text-xs text-gray-500">Last login: ${user.lastLogin}</p>
+                            </div>
+                            <div class="space-x-2">
+                                <button onclick="editUser('${user.username}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                                     Edit
+                                </button>
+                                <button onclick="deleteUser('${user.username}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
+                                     Hapus
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            usersList.innerHTML = html;
+        }
+
+        function updateSystemInfo() {
+            let totalSize = 0;
+            for (let key in localStorage) {
+                if (localStorage.hasOwnProperty(key)) {
+                    totalSize += localStorage[key].length;
+                }
+            }
+            document.getElementById('storage-usage').textContent = (totalSize / 1024).toFixed(2) + ' KB';
+            
+            document.getElementById('browser-info').textContent = navigator.userAgent.split(' ')[0];
+        }
+
+        function updateUptime() {
+            const uptime = Math.floor((Date.now() - adminStartTime) / 60000);
+            document.getElementById('uptime').textContent = uptime + ' menit';
+        }
+
+        function backupAllData() {
+            const backupData = {
+                surveyData: surveyData,
+                surveyTemplate: surveyTemplate,
+                spreadsheetData: JSON.parse(localStorage.getItem('spreadsheetData')) || [],
+                spreadsheetMetadata: JSON.parse(localStorage.getItem('spreadsheetMetadata')) || {},
+                timestamp: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'survey_system_backup_' + new Date().toISOString().split('T')[0] + '.json');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert('? Backup berhasil dibuat!');
+        }
+
+        function restoreData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const backupData = JSON.parse(e.target.result);
+                            if (confirm('Restore data ini? Data saat ini akan diganti.')) {
+                                surveyData = backupData.surveyData || [];
+                                surveyTemplate = backupData.surveyTemplate || getDefaultTemplate();
+                                
+                                localStorage.setItem('surveyData', JSON.stringify(surveyData));
+                                localStorage.setItem('surveyTemplate', JSON.stringify(surveyTemplate));
+                                
+                                if (backupData.spreadsheetData) {
+                                    localStorage.setItem('spreadsheetData', JSON.stringify(backupData.spreadsheetData));
+                                }
+                                if (backupData.spreadsheetMetadata) {
+                                    localStorage.setItem('spreadsheetMetadata', JSON.stringify(backupData.spreadsheetMetadata));
+                                }
+                                
+                                alert('? Data berhasil direstore!');
+                                loadAdminDashboard();
+                            }
+                        } catch (error) {
+                            alert('? File backup tidak valid!');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        function clearAllSystemData() {
+            if (confirm('Hapus SEMUA data sistem? Tindakan ini tidak dapat dibatalkan!')) {
+                if (confirm('Apakah Anda yakin? Semua data survei, template, dan konfigurasi akan hilang!')) {
+                    localStorage.clear();
+                    surveyData = [];
+                    surveyTemplate = getDefaultTemplate();
+                    alert('? Semua data sistem berhasil dihapus!');
+                    location.reload();
+                }
+            }
+        }
+
+        function resetSystem() {
+            if (confirm('Reset sistem lengkap? Semua data akan kembali ke pengaturan default!')) {
+                if (confirm('Konfirmasi terakhir: Reset sistem sekarang?')) {
+                    localStorage.clear();
+                    alert('? Sistem berhasil direset!');
+                    location.reload();
+                }
+            }
+        }
+
+        function addNewUser() {
+            const username = prompt('Username baru:');
+            if (username) {
+                const role = prompt('Role (teacher/admin):');
+                if (role === 'teacher' || role === 'admin') {
+                    alert('? Pengguna baru berhasil ditambahkan! (Demo - dalam implementasi nyata akan tersimpan di database)');
+                    loadUsersList();
+                } else {
+                    alert('? Role harus teacher atau admin!');
+                }
+            }
+        }
+
+        function editUser(username) {
+            alert(`Edit pengguna ${username} (Demo - fitur akan dikembangkan)`);
+        }
+
+        function deleteUser(username) {
+            if (confirm(`Hapus pengguna ${username}?`)) {
+                alert('? Pengguna berhasil dihapus! (Demo)');
+                loadUsersList();
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            showInterface('login');
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96ee5326b1ecc8b5',t:'MTc1NTE1MjIwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
