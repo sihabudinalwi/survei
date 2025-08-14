@@ -72,9 +72,6 @@
                 </button>
             </form>
             
-            <div class="mt-4 p-3 bg-yellow-50 rounded-lg text-sm text-yellow-800">
-                <strong>Demo:</strong> Username: <code>guru</code>, Password: <code>admin123</code>
-            </div>
         </div>
     </div>
 
@@ -103,9 +100,6 @@
                 </button>
             </form>
             
-            <div class="mt-4 p-3 bg-yellow-50 rounded-lg text-sm text-yellow-800">
-                <strong>Demo:</strong> Username: <code>admin</code>, Password: <code>superadmin123</code>
-            </div>
         </div>
     </div>
 
@@ -417,9 +411,10 @@
                     description: 'Informasi dasar tentang responden',
                     fields: [
                         { name: 'nama', label: 'Nama Lengkap', type: 'text', required: true, placeholder: 'Masukkan nama lengkap Anda' },
-                        { name: 'nis', label: 'NIS/NIM', type: 'text', required: true, placeholder: 'Nomor Induk Siswa/Mahasiswa' },
-                        { name: 'kelas', label: 'Kelas/Jurusan', type: 'text', required: true, placeholder: 'Contoh: XII IPA 1, Teknik Mesin' },
-                        { name: 'umur', label: 'Umur', type: 'number', required: true, min: 15, max: 30, placeholder: 'Umur dalam tahun' }
+                        { name: 'nis', label: 'NIS/NISN', type: 'text', required: true, placeholder: 'Nomor Induk Siswa Nasional' },
+                        { name: 'kelas', label: 'Kelas/Jurusan', type: 'text', required: true, placeholder: 'Contoh: XII TKR' },
+                        { name: 'question', label: 'Apakah anda memiliki kendaraan motor?', type: 'select', required: true, options: ['Ya, Saya memiliki motor', 'Tidak saya tidak memiliki motor'] },
+                        { name: 'next question', label: 'Bagaimana anda biasanya pergi ke sekolah?', type: 'select', required: true, options: ['Motor Sendiri', 'Diantar Orangtua', 'Angkutan Umum', 'Jalan Kaki', 'Sepeda', 'Lainnya'] },
                     ]
                 },
                 {
@@ -431,8 +426,7 @@
                     fields: [
                         { name: 'merk', label: 'Merk Motor', type: 'select', required: true, options: ['Honda', 'Yamaha', 'Suzuki', 'Kawasaki', 'TVS', 'Lainnya'] },
                         { name: 'tipe', label: 'Tipe/Model', type: 'text', required: true, placeholder: 'Contoh: Vario 125, NMAX, Scoopy' },
-                        { name: 'tahun', label: 'Tahun Pembuatan', type: 'number', required: true, min: 2000, max: 2024, placeholder: 'Tahun pembuatan motor' },
-                        { name: 'cc', label: 'Kapasitas Mesin (CC)', type: 'select', required: true, options: ['110-125 CC', '150-160 CC', '200-250 CC', '>250 CC'] }
+                        { name: 'Plat', label: 'Plat Nomor', type: 'text', required: true, placeholder: 'Contoh: F 2025 DW  }
                     ]
                 },
                 {
@@ -456,21 +450,12 @@
                     description: 'Kebiasaan dalam perawatan dan penggantian oli',
                     fields: [
                         { name: 'merk_oli', label: 'Merk Oli yang Biasa Digunakan', type: 'text', required: true, placeholder: 'Contoh: Castrol, Shell, Yamalube, Motul' },
-                        { name: 'jenis_oli', label: 'Jenis Oli', type: 'select', required: true, options: ['Mineral', 'Semi Sintetik', 'Full Sintetik', 'Tidak tahu'] },
                         { name: 'frekuensi_ganti', label: 'Frekuensi Ganti Oli', type: 'select', required: true, options: ['Setiap 1000 KM', 'Setiap 2000 KM', 'Setiap 3000 KM', 'Setiap 4000+ KM', 'Tidak teratur'] },
+                        { name: 'faktor_penting', label: 'Faktor Penting dalam Memilih Oli', type: 'select', required: true, options: ['Harga murah', 'Kualitas terbaik', 'Rekomendasi mekanik', 'Merk terkenal', 'Sesuai manual motor'] },
+                        { name: 'komentar', label: 'Saran atau Komentar Tambahan', type: 'textarea', required: false, placeholder: 'Tuliskan saran, pengalaman, atau komentar Anda tentang penggunaan oli motor...' }
                              ]
                 },
                 {
-                    id: 'problems',
-                    title: 'Masalah dan Preferensi',
-                    color: 'red',
-                    icon: '',
-                    description: 'Masalah yang dialami dan preferensi dalam memilih oli',
-                    fields: [
-                        { name: 'masalah', label: 'Masalah yang Sering Dialami', type: 'checkbox', required: false, options: ['Oli cepat habis', 'Mesin panas', 'Suara mesin kasar', 'Oli mengental', 'Tidak ada masalah'] },
-                        { name: 'faktor_penting', label: 'Faktor Penting dalam Memilih Oli', type: 'select', required: true, options: ['Harga murah', 'Kualitas terbaik', 'Rekomendasi mekanik', 'Merk terkenal', 'Sesuai manual motor'] },
-                        { name: 'komentar', label: 'Saran atau Komentar Tambahan', type: 'textarea', required: false, placeholder: 'Tuliskan saran, pengalaman, atau komentar Anda tentang penggunaan oli motor...' }
-                    ]
                 }
             ];
         }
@@ -500,9 +485,7 @@
                     fields: [
                         { name: 'merk', label: 'Merk Motor', type: 'select', required: true, options: ['Honda', 'Yamaha', 'Suzuki', 'Kawasaki', 'TVS', 'Lainnya'] },
                         { name: 'tipe', label: 'Tipe/Model', type: 'text', required: true, placeholder: 'Contoh: Vario 125, NMAX, PCX, Beat' },
-                        { name: 'tahun', label: 'Tahun Pembuatan', type: 'number', required: true, min: 2000, max: 2024, placeholder: 'Tahun pembuatan motor' },
                         { name: 'cc', label: 'Kapasitas Mesin (CC)', type: 'select', required: true, options: ['110-125 CC', '150-160 CC', '200-250 CC', '>250 CC'] },
-                        { name: 'kepemilikan', label: 'Status Kepemilikan', type: 'select', required: true, options: ['Milik pribadi', 'Milik keluarga', 'Kredit/Cicilan', 'Sewa/Pinjam'] }
                     ]
                 },
                 {
@@ -521,10 +504,10 @@
                 },
                 {
                     id: 'oil',
-                    title: 'Kebiasaan Perawatan Oli Motor Guru',
+                    title: 'Kebiasaan Perawatan Oli Motor',
                     color: 'purple',
                     icon: '',
-                    description: 'Kebiasaan dalam perawatan dan penggantian oli sebagai guru',
+                    description: 'Kebiasaan dalam perawatan dan penggantian oli',
                     fields: [
                         { name: 'merk_oli', label: 'Merk Oli yang Biasa Digunakan', type: 'text', required: true, placeholder: 'Contoh: Castrol, Shell, Yamalube, Motul, Enduro' },
                         { name: 'jenis_oli', label: 'Jenis Oli', type: 'select', required: true, options: ['Mineral', 'Semi Sintetik', 'Full Sintetik', 'Tidak tahu'] },
@@ -538,11 +521,10 @@
                     title: 'Masalah dan Preferensi Guru',
                     color: 'red',
                     icon: '',
-                    description: 'Masalah yang dialami dan preferensi dalam memilih oli sebagai guru',
+                    description: 'Masalah yang dialami dan preferensi dalam memilih oli',
                     fields: [
                         { name: 'masalah', label: 'Masalah yang Sering Dialami', type: 'checkbox', required: false, options: ['Oli cepat habis karena sering dipakai', 'Mesin panas saat macet', 'Suara mesin kasar', 'Oli mengental', 'Performa menurun saat hujan', 'Tidak ada masalah'] },
                         { name: 'faktor_penting', label: 'Faktor Penting dalam Memilih Oli', type: 'select', required: true, options: ['Harga terjangkau dengan gaji guru', 'Kualitas tahan lama', 'Rekomendasi bengkel', 'Merk terpercaya', 'Cocok untuk perjalanan harian', 'Mudah didapat'] },
-                        { name: 'pengaruh_cuaca', label: 'Pengaruh Cuaca terhadap Performa Motor', type: 'select', required: true, options: ['Sangat berpengaruh', 'Cukup berpengaruh', 'Sedikit berpengaruh', 'Tidak berpengaruh'] },
                         { name: 'saran_siswa', label: 'Apakah Anda memberikan saran tentang perawatan motor kepada siswa?', type: 'select', required: true, options: ['Sering memberikan saran', 'Kadang-kadang', 'Jarang', 'Tidak pernah'] },
                         { name: 'komentar', label: 'Saran atau Pengalaman sebagai Guru Pengguna Motor', type: 'textarea', required: false, placeholder: 'Bagikan pengalaman Anda sebagai guru dalam menggunakan motor untuk mengajar, tips perawatan, atau saran untuk sesama guru...' }
                     ]
@@ -559,36 +541,15 @@
             }
         }
 
-        function showTeacherLogin() {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('teacher-login').classList.remove('hidden');
-        }
-
         function showAdminLogin() {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('admin-login').classList.remove('hidden');
         }
 
         function backToLogin() {
-            document.getElementById('teacher-login').classList.add('hidden');
             document.getElementById('admin-login').classList.add('hidden');
             document.getElementById('login-screen').classList.remove('hidden');
         }
-
-        // Teacher login form
-        document.getElementById('teacher-login-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const username = document.getElementById('teacher-username').value;
-            const password = document.getElementById('teacher-password').value;
-            
-            if (username === 'guru' && password === 'admin123') {
-                currentUser = { role: 'teacher', username: username };
-                showInterface('teacher');
-                loadTeacherSurvey();
-            } else {
-                alert('? Username atau password salah!');
-            }
-        });
 
         // Admin login form
         document.getElementById('admin-login-form').addEventListener('submit', function(e) {
@@ -596,7 +557,7 @@
             const username = document.getElementById('admin-username').value;
             const password = document.getElementById('admin-password').value;
             
-            if (username === 'admin' && password === 'superadmin123') {
+            if (username === 'TKR' && password === 'OTOMOTIF') {
                 currentUser = { 
                     role: 'admin', 
                     username: username,
@@ -618,7 +579,6 @@
         function showInterface(type) {
             // Hide all interfaces
             document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('teacher-login').classList.add('hidden');
             document.getElementById('admin-login').classList.add('hidden');
             document.getElementById('student-interface').classList.add('hidden');
             document.getElementById('teacher-interface').classList.add('hidden');
@@ -1178,6 +1138,7 @@
                 alert('? Pengguna berhasil dihapus! (Demo)');
                 loadUsersList();
             }
+
         }
 
         // Initialize
@@ -1187,5 +1148,6 @@
     </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96ee5326b1ecc8b5',t:'MTc1NTE1MjIwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+
 
 
