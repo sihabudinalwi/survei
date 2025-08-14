@@ -116,9 +116,10 @@
             <div class="container mx-auto px-4">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-2xl md:text-3xl font-bold">Survei Oli Motor - Siswa</h1>
-                        <p class="text-lg opacity-90">Isi survei kebutuhan oli motor Anda</p>
+                        <h1 class="text-2xl md:text-3xl font-bold">Survei Kendaraan Motor - Siswa & Guru</h1>
+                        <p class="text-lg opacity-90">Isi survei kendaraan motor Anda</p>
                     </div>
+
                     <button onclick="logout()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
                         Keluar
                     </button>
@@ -152,7 +153,7 @@
             <div class="container mx-auto px-4">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-2xl md:text-3xl font-bold">Panel Administrator - Survei Oli Motor</h1>
+                        <h1 class="text-2xl md:text-3xl font-bold">Panel Administrator - Survei Kendaraan Motor</h1>
                         <p class="text-lg opacity-90">Kelola sistem, pengguna, dan integrasi data</p>
                     </div>
                     <button onclick="logout()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
@@ -368,8 +369,8 @@
             <div class="container mx-auto px-4">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-2xl md:text-3xl font-bold"> Survei Oli Motor - Guru</h1>
-                        <p class="text-lg opacity-90">Isi survei kebutuhan oli motor khusus untuk guru</p>
+                        <h1 class="text-2xl md:text-3xl font-bold"> Survei Kendaraan Motor - Guru</h1>
+                        <p class="text-lg opacity-90">Isi survei kendaraan motor khusus untuk guru</p>
                     </div>
                     <button onclick="logout()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
                          Keluar
@@ -418,8 +419,9 @@
                     fields: [
                         { name: 'nama', label: 'Nama Lengkap', type: 'text', required: true, placeholder: 'Masukkan nama lengkap Anda' },
                         { name: 'nis', label: 'NIS/NIM', type: 'text', required: true, placeholder: 'Nomor Induk Siswa/Mahasiswa' },
-                        { name: 'kelas', label: 'Kelas/Jurusan', type: 'text', required: true, placeholder: 'Contoh: XII IPA 1, Teknik Mesin' },
-                        { name: 'umur', label: 'Umur', type: 'number', required: true, min: 15, max: 30, placeholder: 'Umur dalam tahun' }
+                        { name: 'kelas', label: 'Kelas/Jurusan', type: 'text', required: true, placeholder: 'Contoh: XII TKR' },
+                        { name: 'Question', label: 'Apakah Anda memiliki kendaraan motor ?', type: 'select', required: true, options: ['Ya, Saya memiliki kendaraan motor', 'Tidak, Saya tidak memiliki kendaraan motor']}
+                        { name: 'Question2', label: 'Bagaimana Anda biasanya pergi ke sekolah ?', type: 'select', required: true, options: ['Motor Sendiri', 'Diantar Orang Tua', 'Angkutan Umum', 'Jalan Kaki', 'Sepeda']}
                     ]
                 },
                 {
@@ -432,7 +434,7 @@
                         { name: 'merk', label: 'Merk Motor', type: 'select', required: true, options: ['Honda', 'Yamaha', 'Suzuki', 'Kawasaki', 'TVS', 'Lainnya'] },
                         { name: 'tipe', label: 'Tipe/Model', type: 'text', required: true, placeholder: 'Contoh: Vario 125, NMAX, Scoopy' },
                         { name: 'tahun', label: 'Tahun Pembuatan', type: 'number', required: true, min: 2000, max: 2024, placeholder: 'Tahun pembuatan motor' },
-                        { name: 'cc', label: 'Kapasitas Mesin (CC)', type: 'select', required: true, options: ['110-125 CC', '150-160 CC', '200-250 CC', '>250 CC'] }
+                        { name: 'Plat', label: 'Plat Nomor', type: 'text', required: true, placeholder: 'Contoh: F 2025 DW' }
                     ]
                 },
                 {
@@ -456,25 +458,11 @@
                     description: 'Kebiasaan dalam perawatan dan penggantian oli',
                     fields: [
                         { name: 'merk_oli', label: 'Merk Oli yang Biasa Digunakan', type: 'text', required: true, placeholder: 'Contoh: Castrol, Shell, Yamalube, Motul' },
-                        { name: 'jenis_oli', label: 'Jenis Oli', type: 'select', required: true, options: ['Mineral', 'Semi Sintetik', 'Full Sintetik', 'Tidak tahu'] },
                         { name: 'frekuensi_ganti', label: 'Frekuensi Ganti Oli', type: 'select', required: true, options: ['Setiap 1000 KM', 'Setiap 2000 KM', 'Setiap 3000 KM', 'Setiap 4000+ KM', 'Tidak teratur'] },
-                             ]
-                },
-                {
-                    id: 'problems',
-                    title: 'Masalah dan Preferensi',
-                    color: 'red',
-                    icon: '',
-                    description: 'Masalah yang dialami dan preferensi dalam memilih oli',
-                    fields: [
-                        { name: 'masalah', label: 'Masalah yang Sering Dialami', type: 'checkbox', required: false, options: ['Oli cepat habis', 'Mesin panas', 'Suara mesin kasar', 'Oli mengental', 'Tidak ada masalah'] },
                         { name: 'faktor_penting', label: 'Faktor Penting dalam Memilih Oli', type: 'select', required: true, options: ['Harga murah', 'Kualitas terbaik', 'Rekomendasi mekanik', 'Merk terkenal', 'Sesuai manual motor'] },
                         { name: 'komentar', label: 'Saran atau Komentar Tambahan', type: 'textarea', required: false, placeholder: 'Tuliskan saran, pengalaman, atau komentar Anda tentang penggunaan oli motor...' }
-                    ]
-                }
             ];
-        }
-
+        
         // Survey template for teachers
         function getTeacherTemplate() {
             return [
@@ -502,7 +490,6 @@
                         { name: 'tipe', label: 'Tipe/Model', type: 'text', required: true, placeholder: 'Contoh: Vario 125, NMAX, PCX, Beat' },
                         { name: 'tahun', label: 'Tahun Pembuatan', type: 'number', required: true, min: 2000, max: 2024, placeholder: 'Tahun pembuatan motor' },
                         { name: 'cc', label: 'Kapasitas Mesin (CC)', type: 'select', required: true, options: ['110-125 CC', '150-160 CC', '200-250 CC', '>250 CC'] },
-                        { name: 'kepemilikan', label: 'Status Kepemilikan', type: 'select', required: true, options: ['Milik pribadi', 'Milik keluarga', 'Kredit/Cicilan', 'Sewa/Pinjam'] }
                     ]
                 },
                 {
@@ -1187,3 +1174,4 @@
     </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96ee5326b1ecc8b5',t:'MTc1NTE1MjIwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+
