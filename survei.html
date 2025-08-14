@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Survei Kendaraan Motor - Siswa & Guru</title>
+    <title>Sistem Survei Oli Motor - Siswa & Guru</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -17,72 +17,110 @@
         .spreadsheet-table th, .spreadsheet-table td { border: 1px solid #d1d5db; padding: 8px; text-align: left; }
         .spreadsheet-table th { background-color: #f3f4f6; font-weight: 600; }
         .spreadsheet-table tr:nth-child(even) { background-color: #f9fafb; }
+        
+        /* Notification Popup Styles */
+        .notification-popup {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            min-width: 300px;
+            max-width: 400px;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        .notification-popup.show {
+            transform: translateX(0);
+        }
+        .notification-success { background: #10b981; color: white; }
+        .notification-error { background: #ef4444; color: white; }
+        .notification-info { background: #3b82f6; color: white; }
+        .notification-warning { background: #f59e0b; color: white; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+    
+    <!-- Progress Modal -->
+    <div id="progress-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+            <div class="text-center">
+                <div class="text-4xl mb-4" id="progress-icon">📤</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2" id="progress-title">Mengirim Survei...</h3>
+                <p class="text-gray-600 mb-6" id="progress-message">Mohon tunggu, data sedang diproses</p>
+                
+                <!-- Progress Bar -->
+                <div class="w-full bg-gray-200 rounded-full h-4 mb-4">
+                    <div id="progress-bar" class="bg-blue-600 h-4 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                
+                <!-- Progress Text -->
+                <div class="flex justify-between text-sm text-gray-600 mb-4">
+                    <span id="progress-step">Memulai...</span>
+                    <span id="progress-percentage">0%</span>
+                </div>
+                
+                <!-- Progress Steps -->
+                <div class="text-left space-y-2 text-sm">
+                    <div id="step-validate" class="flex items-center text-gray-400">
+                        <span class="w-4 h-4 mr-2">⏳</span>
+                        <span>Memvalidasi data survei</span>
+                    </div>
+                    <div id="step-process" class="flex items-center text-gray-400">
+                        <span class="w-4 h-4 mr-2">⏳</span>
+                        <span>Memproses data</span>
+                    </div>
+                    <div id="step-save" class="flex items-center text-gray-400">
+                        <span class="w-4 h-4 mr-2">⏳</span>
+                        <span>Menyimpan ke database</span>
+                    </div>
+                    <div id="step-complete" class="flex items-center text-gray-400">
+                        <span class="w-4 h-4 mr-2">⏳</span>
+                        <span>Menyelesaikan proses</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Login Screen -->
     <div id="login-screen" class="min-h-screen flex items-center justify-center">
         <div class="bg-white rounded-lg card-shadow p-8 w-full max-w-md">
             <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-800 mb-2"> Survei Kendaraan Motor - Siswa & Guru</h1>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">🏍️ Sistem Survei Oli Motor</h1>
                 <p class="text-gray-600">Pilih peran Anda untuk melanjutkan</p>
             </div>
             
             <div class="space-y-4">
                 <button onclick="loginAs('student')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
-                    <span></span>
+                    <span>👨‍🎓</span>
                     <span>Masuk sebagai Siswa</span>
                 </button>
                 
-                <button onclick="showTeacherLogin()" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
-                    <span></span>
+                <button onclick="loginAs('teacher')" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
+                    <span>👩‍🏫</span>
                     <span>Masuk sebagai Guru</span>
                 </button>
                 
                 <button onclick="showAdminLogin()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
-                    <span></span>
+                    <span>👨‍💼</span>
                     <span>Masuk sebagai Administrator</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Teacher Login Form -->
-    <div id="teacher-login" class="hidden min-h-screen flex items-center justify-center">
-        <div class="bg-white rounded-lg card-shadow p-8 w-full max-w-md">
-            <div class="text-center mb-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-2">Login Guru</h2>
-                <p class="text-gray-600">Masukkan kredensial untuk mengakses panel guru</p>
-            </div>
-            
-            <form id="teacher-login-form" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
-                    <input type="text" id="teacher-username" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent" placeholder="Masukkan username">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                    <input type="password" id="teacher-password" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent" placeholder="Masukkan password">
-                </div>
-                <button type="submit" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200">
-                    Login
-                </button>
-                <button type="button" onclick="backToLogin()" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200">
-                    ? Kembali
-                </button>
-            </form>
-            
-            <div class="mt-4 p-3 bg-yellow-50 rounded-lg text-sm text-yellow-800">
-                <strong>Demo:</strong> Username: <code>guru</code>, Password: <code>admin123</code>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Admin Login Form -->
     <div id="admin-login" class="hidden min-h-screen flex items-center justify-center">
         <div class="bg-white rounded-lg card-shadow p-8 w-full max-w-md">
             <div class="text-center mb-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-2">Login Administrator</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">👨‍💼 Login Administrator</h2>
                 <p class="text-gray-600">Masukkan kredensial untuk mengakses panel administrator</p>
             </div>
             
@@ -96,10 +134,10 @@
                     <input type="password" id="admin-password" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Masukkan password">
                 </div>
                 <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200">
-                    Login
+                    🔐 Login
                 </button>
                 <button type="button" onclick="backToLogin()" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200">
-                    ? Kembali
+                    ← Kembali
                 </button>
             </form>
             
@@ -116,12 +154,11 @@
             <div class="container mx-auto px-4">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-2xl md:text-3xl font-bold">Survei Kendaraan Motor - Siswa & Guru</h1>
-                        <p class="text-lg opacity-90">Isi survei kendaraan motor Anda</p>
+                        <h1 class="text-2xl md:text-3xl font-bold">🏍️ Survei Oli Motor - Siswa</h1>
+                        <p class="text-lg opacity-90">Isi survei kebutuhan oli motor Anda</p>
                     </div>
-
                     <button onclick="logout()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
-                        Keluar
+                        🚪 Keluar
                     </button>
                 </div>
             </div>
@@ -129,7 +166,7 @@
 
         <div class="container mx-auto px-4 py-8">
             <div class="bg-white rounded-lg card-shadow p-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">Form Survei</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">📝 Form Survei</h2>
                 
                 <form id="student-survey-form" class="space-y-6">
                     <div id="dynamic-survey-fields">
@@ -138,7 +175,7 @@
 
                     <div class="text-center">
                         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg">
-                            Kirim Survei
+                            📤 Kirim Survei
                         </button>
                     </div>
                 </form>
@@ -153,11 +190,11 @@
             <div class="container mx-auto px-4">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-2xl md:text-3xl font-bold">Panel Administrator - Survei Kendaraan Motor</h1>
+                        <h1 class="text-2xl md:text-3xl font-bold">👨‍💼 Panel Administrator - Survei Oli Motor</h1>
                         <p class="text-lg opacity-90">Kelola sistem, pengguna, dan integrasi data</p>
                     </div>
                     <button onclick="logout()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
-                        Keluar
+                        🚪 Keluar
                     </button>
                 </div>
             </div>
@@ -168,48 +205,60 @@
             <div class="bg-white rounded-lg card-shadow mb-8 p-1">
                 <div class="flex flex-wrap">
                     <button onclick="showAdminTab('dashboard')" id="admin-tab-dashboard" class="flex-1 py-3 px-4 text-center font-medium rounded-md transition-all bg-purple-600 text-white">
-                        Dashboard
+                        📊 Dashboard
                     </button>
                     <button onclick="showAdminTab('spreadsheet')" id="admin-tab-spreadsheet" class="flex-1 py-3 px-4 text-center font-medium rounded-md transition-all text-gray-600 hover:bg-gray-100">
-                         Spreadsheet
+                        📋 Spreadsheet
                     </button>
                     <button onclick="showAdminTab('users')" id="admin-tab-users" class="flex-1 py-3 px-4 text-center font-medium rounded-md transition-all text-gray-600 hover:bg-gray-100">
-                         Kelola Pengguna
+                        👥 Kelola Pengguna
+                    </button>
+                    <button onclick="showAdminTab('editor')" id="admin-tab-editor" class="flex-1 py-3 px-4 text-center font-medium rounded-md transition-all text-gray-600 hover:bg-gray-100">
+                        ✏️ Editor Website
                     </button>
                     <button onclick="showAdminTab('system')" id="admin-tab-system" class="flex-1 py-3 px-4 text-center font-medium rounded-md transition-all text-gray-600 hover:bg-gray-100">
-                         Sistem
+                        ⚙️ Sistem
                     </button>
                 </div>
             </div>
 
             <!-- Dashboard Tab -->
             <div id="admin-dashboard-tab" class="animate-fade-in">
-                <div class="grid md:grid-cols-4 gap-6 mb-8">
+                <div class="grid md:grid-cols-5 gap-6 mb-8">
                     <div class="bg-white rounded-lg card-shadow p-6">
                         <div class="flex items-center justify-between">
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-800">Total Survei</h3>
                                 <p class="text-3xl font-bold text-purple-600" id="admin-total-surveys">0</p>
                             </div>
-                            <div class="text-4xl"></div>
+                            <div class="text-4xl">📝</div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg card-shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Total Siswa</h3>
+                                <p class="text-3xl font-bold text-blue-600" id="admin-total-students">0</p>
+                            </div>
+                            <div class="text-4xl">👨‍🎓</div>
                         </div>
                     </div>
                     <div class="bg-white rounded-lg card-shadow p-6">
                         <div class="flex items-center justify-between">
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-800">Hari Ini</h3>
-                                <p class="text-3xl font-bold text-blue-600" id="admin-today-surveys">0</p>
+                                <p class="text-3xl font-bold text-green-600" id="admin-today-surveys">0</p>
                             </div>
-                            <div class="text-4xl"></div>
+                            <div class="text-4xl">📅</div>
                         </div>
                     </div>
                     <div class="bg-white rounded-lg card-shadow p-6">
                         <div class="flex items-center justify-between">
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-800">Total Guru</h3>
-                                <p class="text-3xl font-bold text-pink-600" id="admin-total-teachers">1</p>
+                                <p class="text-3xl font-bold text-pink-600" id="admin-total-teachers">0</p>
                             </div>
-                            <div class="text-4xl"></div>
+                            <div class="text-4xl">👩‍🏫</div>
                         </div>
                     </div>
                     <div class="bg-white rounded-lg card-shadow p-6">
@@ -220,16 +269,105 @@
                                     <span class="text-green-600">Aktif</span>
                                 </p>
                             </div>
-                            <div class="text-4xl"></div>
+                            <div class="text-4xl">📊</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Charts -->
+                <div class="grid md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white rounded-lg card-shadow p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">📊 Moda Transportasi Populer</h3>
+                        <div id="transportation-chart" class="h-64">
+                            <div class="flex items-center justify-center h-full text-gray-500">
+                                <div class="text-center">
+                                    <div class="text-4xl mb-2">📊</div>
+                                    <p>Grafik akan muncul setelah ada data survei</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg card-shadow p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">🥧 Proporsi Kepemilikan Motor</h3>
+                        <div id="ownership-chart" class="h-64">
+                            <div class="flex items-center justify-center h-full text-gray-500">
+                                <div class="text-center">
+                                    <div class="text-4xl mb-2">🥧</div>
+                                    <p>Grafik akan muncul setelah ada data survei</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Motor & Oil Analytics Charts -->
+                <div class="grid md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white rounded-lg card-shadow p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">🏍️ Merek Motor yang Digunakan</h3>
+                        <div id="motor-brand-chart" class="h-64">
+                            <div class="flex items-center justify-center h-full text-gray-500">
+                                <div class="text-center">
+                                    <div class="text-4xl mb-2">🏍️</div>
+                                    <p>Grafik akan muncul setelah ada data survei</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg card-shadow p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">🛢️ Merek Oli yang Digunakan</h3>
+                        <div id="oil-brand-chart" class="h-64">
+                            <div class="flex items-center justify-center h-full text-gray-500">
+                                <div class="text-center">
+                                    <div class="text-4xl mb-2">🛢️</div>
+                                    <p>Grafik akan muncul setelah ada data survei</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg card-shadow p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">📈 Frekuensi Ganti Oli</h3>
+                        <div id="oil-frequency-chart" class="h-64">
+                            <div class="flex items-center justify-center h-full text-gray-500">
+                                <div class="text-center">
+                                    <div class="text-4xl mb-2">📈</div>
+                                    <p>Grafik akan muncul setelah ada data survei</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Analytics -->
+                <div class="grid md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white rounded-lg card-shadow p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">🛣️ Jarak Tempuh Harian</h3>
+                        <div id="daily-distance-chart" class="h-64">
+                            <div class="flex items-center justify-center h-full text-gray-500">
+                                <div class="text-center">
+                                    <div class="text-4xl mb-2">🛣️</div>
+                                    <p>Grafik akan muncul setelah ada data survei</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg card-shadow p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">💰 Faktor Penting Memilih Oli</h3>
+                        <div id="oil-factors-chart" class="h-64">
+                            <div class="flex items-center justify-center h-full text-gray-500">
+                                <div class="text-center">
+                                    <div class="text-4xl mb-2">💰</div>
+                                    <p>Grafik akan muncul setelah ada data survei</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-lg card-shadow p-8">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6"> Aktivitas Sistem</h2>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">📈 Aktivitas Sistem</h2>
                     <div id="admin-activity-log" class="space-y-3">
                         <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded">
-                            <span class="text-green-600">?</span>
+                            <span class="text-green-600">✅</span>
                             <span class="text-sm text-gray-600">Sistem dimulai - Administrator login</span>
                             <span class="text-xs text-gray-400 ml-auto" id="admin-login-time"></span>
                         </div>
@@ -241,18 +379,33 @@
             <div id="admin-spreadsheet-tab" class="hidden animate-fade-in">
                 <div class="bg-white rounded-lg card-shadow p-8">
                     <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold text-gray-800"> Data Spreadsheet Survei</h2>
+                        <h2 class="text-2xl font-bold text-gray-800">📋 Data Spreadsheet Survei</h2>
                         <div class="space-x-2">
                             <button onclick="refreshSpreadsheet()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
-                                 Refresh
+                                🔄 Refresh
                             </button>
                             <button onclick="exportSpreadsheet()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
-                                 Export CSV
+                                📥 Export CSV
                             </button>
                             <button onclick="clearSpreadsheet()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
-                                 Hapus Semua
+                                🗑️ Hapus Semua
                             </button>
                         </div>
+                    </div>
+                    
+                    <!-- Search Bar -->
+                    <div class="mb-6">
+                        <div class="flex gap-4">
+                            <div class="flex-1">
+                                <input type="text" id="spreadsheet-search" placeholder="🔍 Cari data survei (nama, kelas, merk motor, dll...)" 
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       oninput="searchSpreadsheet()">
+                            </div>
+                            <button onclick="clearSearch()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
+                                ❌ Clear
+                            </button>
+                        </div>
+                        <div id="search-results-info" class="mt-2 text-sm text-gray-600"></div>
                     </div>
                     
                     <div class="mb-4 p-4 bg-blue-50 rounded-lg">
@@ -280,7 +433,7 @@
                         <div id="spreadsheet-container" class="min-h-[400px] border border-gray-300 rounded-lg">
                             <div class="flex items-center justify-center h-64 text-gray-500">
                                 <div class="text-center">
-                                    <div class="text-4xl mb-4"></div>
+                                    <div class="text-4xl mb-4">📊</div>
                                     <p>Data spreadsheet akan muncul di sini</p>
                                     <p class="text-sm">Klik "Refresh" untuk memuat data terbaru</p>
                                 </div>
@@ -294,9 +447,9 @@
             <div id="admin-users-tab" class="hidden animate-fade-in">
                 <div class="bg-white rounded-lg card-shadow p-8">
                     <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold text-gray-800"> Kelola Pengguna</h2>
+                        <h2 class="text-2xl font-bold text-gray-800">👥 Kelola Pengguna</h2>
                         <button onclick="addNewUser()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
-                            ? Tambah Pengguna
+                            ➕ Tambah Pengguna
                         </button>
                     </div>
                     
@@ -306,23 +459,160 @@
                 </div>
             </div>
 
+            <!-- Website Editor Tab -->
+            <div id="admin-editor-tab" class="hidden animate-fade-in">
+                <div class="bg-white rounded-lg card-shadow p-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">✏️ Editor Website</h2>
+                    <p class="text-gray-600 mb-6">Edit dan kustomisasi seluruh konten website untuk berbagai kegiatan survei</p>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- Website Settings -->
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4 text-purple-800">🎨 Pengaturan Umum Website</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Judul Website</label>
+                                        <input type="text" id="website-title" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" value="Sistem Survei Oli Motor">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi Website</label>
+                                        <textarea id="website-description" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">Sistem survei untuk mengumpulkan data kebutuhan oli motor siswa dan guru</textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Icon Website</label>
+                                        <input type="text" id="website-icon" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" value="🏍️" placeholder="Emoji atau simbol">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4 text-blue-800">👨‍🎓 Pengaturan Halaman Siswa</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Judul Halaman Siswa</label>
+                                        <input type="text" id="student-title" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" value="Survei Oli Motor - Siswa">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi Halaman Siswa</label>
+                                        <input type="text" id="student-description" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" value="Isi survei kebutuhan oli motor Anda">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4 text-pink-800">👩‍🏫 Pengaturan Halaman Guru</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Judul Halaman Guru</label>
+                                        <input type="text" id="teacher-title" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500" value="Survei Oli Motor - Guru">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi Halaman Guru</label>
+                                        <input type="text" id="teacher-description" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500" value="Isi survei kebutuhan oli motor khusus untuk guru">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Survey Form Editor -->
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4 text-green-800">📝 Editor Form Survei</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Form untuk Diedit</label>
+                                        <select id="form-selector" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" onchange="loadFormEditor()">
+                                            <option value="student">Form Survei Siswa</option>
+                                            <option value="teacher">Form Survei Guru</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Judul Form</label>
+                                        <input type="text" id="form-title" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" value="Form Survei">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi Form</label>
+                                        <textarea id="form-description" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">Silakan isi form survei berikut dengan lengkap</textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4 text-orange-800">📋 Sections Form</h3>
+                                <div id="sections-editor" class="space-y-3 max-h-64 overflow-y-auto">
+                                    <!-- Dynamic sections will be loaded here -->
+                                </div>
+                                <button onclick="addNewSection()" class="mt-3 w-full bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                    ➕ Tambah Section Baru
+                                </button>
+                            </div>
+
+                            <div>
+                                <h3 class="text-lg font-semibold mb-4 text-red-800">💬 Pesan Sukses</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Pesan Setelah Survei Dikirim</label>
+                                        <textarea id="success-message" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500">Terima kasih atas partisipasi Anda dalam survei ini! Kami sangat menghargai waktu dan tanggapan Anda. Data yang Anda berikan akan sangat membantu kami dalam memahami kebutuhan transportasi sekolah dan perawatan kendaraan, sehingga kami dapat meningkatkan layanan untuk siswa dan guru.</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="mt-8 flex flex-wrap gap-4 justify-center">
+                        <button onclick="previewChanges()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors">
+                            👁️ Preview Perubahan
+                        </button>
+                        <button onclick="saveWebsiteChanges()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors">
+                            💾 Simpan Perubahan
+                        </button>
+                        <button onclick="resetToDefault()" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg transition-colors">
+                            🔄 Reset ke Default
+                        </button>
+                        <button onclick="exportWebsiteTemplate()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors">
+                            📤 Export Template
+                        </button>
+                        <button onclick="importWebsiteTemplate()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg transition-colors">
+                            📥 Import Template
+                        </button>
+                    </div>
+
+                    <!-- Preview Modal -->
+                    <div id="preview-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                        <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                            <div class="p-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-xl font-bold">👁️ Preview Website</h3>
+                                    <button onclick="closePreview()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                                </div>
+                                <div id="preview-content" class="border border-gray-300 rounded-lg p-4 bg-gray-50">
+                                    <!-- Preview content will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- System Tab -->
             <div id="admin-system-tab" class="hidden animate-fade-in">
                 <div class="bg-white rounded-lg card-shadow p-8">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6"> Pengaturan Sistem</h2>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">⚙️ Pengaturan Sistem</h2>
                     
                     <div class="grid md:grid-cols-2 gap-6">
                         <div>
                             <h3 class="text-lg font-semibold mb-4">Data Management</h3>
                             <div class="space-y-3">
                                 <button onclick="backupAllData()" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-left">
-                                     Backup Semua Data
+                                    💾 Backup Semua Data
                                 </button>
                                 <button onclick="restoreData()" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors text-left">
-                                     Restore Data
+                                    📥 Restore Data
                                 </button>
                                 <button onclick="clearAllSystemData()" class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors text-left">
-                                     Hapus Semua Data
+                                    🗑️ Hapus Semua Data
                                 </button>
                             </div>
                         </div>
@@ -351,10 +641,10 @@
                     </div>
 
                     <div class="mt-8 p-4 bg-red-50 rounded-lg">
-                        <h4 class="font-semibold text-red-800 mb-2"> Zona Bahaya</h4>
+                        <h4 class="font-semibold text-red-800 mb-2">⚠️ Zona Bahaya</h4>
                         <p class="text-sm text-red-700 mb-3">Aksi di bawah ini akan menghapus data secara permanen!</p>
                         <button onclick="resetSystem()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
-                             Reset Sistem Lengkap
+                            🔄 Reset Sistem Lengkap
                         </button>
                     </div>
                 </div>
@@ -369,11 +659,11 @@
             <div class="container mx-auto px-4">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-2xl md:text-3xl font-bold"> Survei Kendaraan Motor - Guru</h1>
-                        <p class="text-lg opacity-90">Isi survei kendaraan motor khusus untuk guru</p>
+                        <h1 class="text-2xl md:text-3xl font-bold">👩‍🏫 Survei Oli Motor - Guru</h1>
+                        <p class="text-lg opacity-90">Isi survei kebutuhan oli motor khusus untuk guru</p>
                     </div>
                     <button onclick="logout()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
-                         Keluar
+                        🚪 Keluar
                     </button>
                 </div>
             </div>
@@ -381,7 +671,7 @@
 
         <div class="container mx-auto px-4 py-8">
             <div class="bg-white rounded-lg card-shadow p-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6"> Form Survei Khusus Guru</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">📝 Form Survei Khusus Guru</h2>
                 
                 <form id="teacher-survey-form" class="space-y-6">
                     <div id="teacher-dynamic-survey-fields">
@@ -390,7 +680,7 @@
 
                     <div class="text-center">
                         <button type="submit" class="bg-pink-600 hover:bg-pink-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg">
-                             Kirim Survei Guru
+                            📤 Kirim Survei Guru
                         </button>
                     </div>
                 </form>
@@ -406,6 +696,202 @@
         let surveyData = JSON.parse(localStorage.getItem('surveyData')) || [];
         let surveyTemplate = JSON.parse(localStorage.getItem('surveyTemplate')) || getDefaultTemplate();
         let adminStartTime = Date.now();
+        let filteredSpreadsheetData = [];
+
+        // Admin Progress Functions
+        function showAdminProgress(message, callback, duration = 2000) {
+            const modal = document.getElementById('progress-modal');
+            const progressBar = document.getElementById('progress-bar');
+            const progressPercentage = document.getElementById('progress-percentage');
+            const progressStep = document.getElementById('progress-step');
+            const progressTitle = document.getElementById('progress-title');
+            const progressMessage = document.getElementById('progress-message');
+            const progressIcon = document.getElementById('progress-icon');
+            
+            // Configure for admin action
+            progressTitle.textContent = 'Memproses...';
+            progressMessage.textContent = message;
+            progressIcon.textContent = '⚙️';
+            progressStep.textContent = 'Memulai proses...';
+            
+            // Hide step indicators for admin actions
+            document.getElementById('step-validate').style.display = 'none';
+            document.getElementById('step-process').style.display = 'none';
+            document.getElementById('step-save').style.display = 'none';
+            document.getElementById('step-complete').style.display = 'none';
+            
+            // Show modal
+            modal.classList.remove('hidden');
+            
+            // Reset progress
+            progressBar.style.width = '0%';
+            progressPercentage.textContent = '0%';
+            
+            // Animate progress
+            let currentProgress = 0;
+            const progressInterval = setInterval(() => {
+                currentProgress += 5;
+                if (currentProgress >= 100) {
+                    currentProgress = 100;
+                    clearInterval(progressInterval);
+                    
+                    // Complete
+                    progressStep.textContent = 'Proses selesai!';
+                    progressIcon.textContent = '✅';
+                    
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                        
+                        // Reset step indicators visibility
+                        document.getElementById('step-validate').style.display = 'flex';
+                        document.getElementById('step-process').style.display = 'flex';
+                        document.getElementById('step-save').style.display = 'flex';
+                        document.getElementById('step-complete').style.display = 'flex';
+                        
+                        // Execute callback
+                        if (callback) callback();
+                    }, 500);
+                }
+                
+                progressBar.style.width = currentProgress + '%';
+                progressPercentage.textContent = Math.round(currentProgress) + '%';
+                
+                // Update step message based on progress
+                if (currentProgress < 30) {
+                    progressStep.textContent = 'Memulai proses...';
+                } else if (currentProgress < 60) {
+                    progressStep.textContent = 'Memproses data...';
+                } else if (currentProgress < 90) {
+                    progressStep.textContent = 'Menyelesaikan...';
+                } else {
+                    progressStep.textContent = 'Hampir selesai...';
+                }
+            }, duration / 20);
+        }
+
+        // Progress Modal Functions
+        function showProgressAndSuccess(data, callback) {
+            const modal = document.getElementById('progress-modal');
+            const progressBar = document.getElementById('progress-bar');
+            const progressPercentage = document.getElementById('progress-percentage');
+            const progressStep = document.getElementById('progress-step');
+            
+            // Show modal
+            modal.classList.remove('hidden');
+            
+            // Reset progress
+            progressBar.style.width = '0%';
+            progressPercentage.textContent = '0%';
+            
+            // Progress steps
+            const steps = [
+                { id: 'step-validate', text: 'Memvalidasi data survei', duration: 800 },
+                { id: 'step-process', text: 'Memproses data', duration: 600 },
+                { id: 'step-save', text: 'Menyimpan ke database', duration: 700 },
+                { id: 'step-complete', text: 'Menyelesaikan proses', duration: 500 }
+            ];
+            
+            let currentStep = 0;
+            let currentProgress = 0;
+            
+            function runStep() {
+                if (currentStep < steps.length) {
+                    const step = steps[currentStep];
+                    const stepElement = document.getElementById(step.id);
+                    
+                    // Update current step
+                    progressStep.textContent = step.text;
+                    
+                    // Mark step as active
+                    stepElement.classList.remove('text-gray-400');
+                    stepElement.classList.add('text-blue-600');
+                    stepElement.querySelector('span').textContent = '🔄';
+                    
+                    // Animate progress
+                    const targetProgress = ((currentStep + 1) / steps.length) * 100;
+                    const progressInterval = setInterval(() => {
+                        currentProgress += 2;
+                        if (currentProgress >= targetProgress) {
+                            currentProgress = targetProgress;
+                            clearInterval(progressInterval);
+                            
+                            // Mark step as complete
+                            stepElement.classList.remove('text-blue-600');
+                            stepElement.classList.add('text-green-600');
+                            stepElement.querySelector('span').textContent = '✅';
+                            
+                            currentStep++;
+                            setTimeout(runStep, 200);
+                        }
+                        
+                        progressBar.style.width = currentProgress + '%';
+                        progressPercentage.textContent = Math.round(currentProgress) + '%';
+                    }, step.duration / 50);
+                } else {
+                    // All steps complete
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                        
+                        // Execute callback
+                        if (callback) callback();
+                        
+                        // Show success message
+                        let successMessage;
+                        if (data.kepemilikan_motor === 'Tidak, saya tidak memiliki kendaraan motor') {
+                            data.status_survei = 'Lengkap (Tanpa Motor)';
+                            successMessage = '✅ Survei berhasil dikirim!\n\nTerima kasih atas partisipasi Anda dalam survei ini! Kami sangat menghargai waktu dan tanggapan Anda. Data yang Anda berikan akan sangat membantu kami dalam memahami kebutuhan transportasi sekolah dan perawatan kendaraan, sehingga kami dapat meningkatkan layanan untuk siswa dan guru.';
+                        } else {
+                            data.status_survei = 'Lengkap (Dengan Motor)';
+                            successMessage = '✅ Survei berhasil dikirim!\n\nTerima kasih atas partisipasi Anda dalam survei ini! Kami sangat menghargai waktu dan tanggapan Anda. Data yang Anda berikan akan sangat membantu kami dalam memahami kebutuhan transportasi sekolah dan perawatan kendaraan, sehingga kami dapat meningkatkan layanan untuk siswa dan guru.';
+                        }
+                        
+                        // Show success popup
+                        setTimeout(() => {
+                            alert(successMessage);
+                        }, 300);
+                        
+                    }, 500);
+                }
+            }
+            
+            // Start progress
+            setTimeout(runStep, 300);
+        }
+
+        // Notification System
+        function showNotification(message, type = 'success', duration = 4000) {
+            const container = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            notification.className = `notification-popup notification-${type}`;
+            
+            const icons = {
+                success: '✅',
+                error: '❌',
+                info: 'ℹ️',
+                warning: '⚠️'
+            };
+            
+            notification.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-xl">${icons[type]}</span>
+                        <span class="font-medium">${message}</span>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="text-white hover:text-gray-200 text-xl font-bold">×</button>
+                </div>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Show notification
+            setTimeout(() => notification.classList.add('show'), 100);
+            
+            // Auto remove
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, duration);
+        }
 
         // Default survey template for students
         function getDefaultTemplate() {
@@ -414,34 +900,33 @@
                     id: 'personal',
                     title: 'Data Pribadi',
                     color: 'blue',
-                    icon: '',
+                    icon: '👤',
                     description: 'Informasi dasar tentang responden',
                     fields: [
                         { name: 'nama', label: 'Nama Lengkap', type: 'text', required: true, placeholder: 'Masukkan nama lengkap Anda' },
                         { name: 'nis', label: 'NIS/NIM', type: 'text', required: true, placeholder: 'Nomor Induk Siswa/Mahasiswa' },
-                        { name: 'kelas', label: 'Kelas/Jurusan', type: 'text', required: true, placeholder: 'Contoh: XII TKR' },
-                        { name: 'Question', label: 'Apakah Anda memiliki kendaraan motor ?', type: 'select', required: true, options: ['Ya, Saya memiliki kendaraan motor', 'Tidak, Saya tidak memiliki kendaraan motor']}
-                        { name: 'Question2', label: 'Bagaimana Anda biasanya pergi ke sekolah ?', type: 'select', required: true, options: ['Motor Sendiri', 'Diantar Orang Tua', 'Angkutan Umum', 'Jalan Kaki', 'Sepeda']}
+                        { name: 'kelas', label: 'Kelas/Jurusan', type: 'text', required: true, placeholder: 'Contoh: XII IPA 1, Teknik Mesin' },
+                        { name: 'kepemilikan_motor', label: 'Apakah Anda memiliki kendaraan motor?', type: 'select', required: true, options: ['Ya, saya memiliki kendaraan motor', 'Tidak, saya tidak memiliki kendaraan motor'] },
+                        { name: 'moda_transportasi', label: 'Apa moda transportasi yang Anda gunakan untuk berangkat ke sekolah?', type: 'select', required: true, options: ['Jalan kaki', 'Sepeda', 'Motor', 'Mobil pribadi', 'Angkutan umum', 'Lainnya'] }
                     ]
                 },
                 {
                     id: 'vehicle',
                     title: 'Data Kendaraan Motor',
                     color: 'green',
-                    icon: '',
+                    icon: '🏍️',
                     description: 'Informasi tentang motor yang digunakan',
                     fields: [
                         { name: 'merk', label: 'Merk Motor', type: 'select', required: true, options: ['Honda', 'Yamaha', 'Suzuki', 'Kawasaki', 'TVS', 'Lainnya'] },
                         { name: 'tipe', label: 'Tipe/Model', type: 'text', required: true, placeholder: 'Contoh: Vario 125, NMAX, Scoopy' },
-                        { name: 'tahun', label: 'Tahun Pembuatan', type: 'number', required: true, min: 2000, max: 2024, placeholder: 'Tahun pembuatan motor' },
-                        { name: 'Plat', label: 'Plat Nomor', type: 'text', required: true, placeholder: 'Contoh: F 2025 DW' }
+                        { name: 'plat_nomor', label: 'Plat Nomor', type: 'text', required: true, placeholder: 'Contoh: B 1234 ABC' }
                     ]
                 },
                 {
                     id: 'usage',
                     title: 'Kebiasaan Penggunaan Motor',
                     color: 'yellow',
-                    icon: '',
+                    icon: '🛣️',
                     description: 'Pola penggunaan motor sehari-hari',
                     fields: [
                         { name: 'jarak_harian', label: 'Jarak Tempuh per Hari (KM)', type: 'select', required: true, options: ['Kurang dari 10 KM', '10-20 KM', '20-50 KM', 'Lebih dari 50 KM'] },
@@ -454,15 +939,19 @@
                     id: 'oil',
                     title: 'Kebiasaan Perawatan Oli',
                     color: 'purple',
-                    icon: '',
+                    icon: '🛢️',
                     description: 'Kebiasaan dalam perawatan dan penggantian oli',
                     fields: [
                         { name: 'merk_oli', label: 'Merk Oli yang Biasa Digunakan', type: 'text', required: true, placeholder: 'Contoh: Castrol, Shell, Yamalube, Motul' },
                         { name: 'frekuensi_ganti', label: 'Frekuensi Ganti Oli', type: 'select', required: true, options: ['Setiap 1000 KM', 'Setiap 2000 KM', 'Setiap 3000 KM', 'Setiap 4000+ KM', 'Tidak teratur'] },
                         { name: 'faktor_penting', label: 'Faktor Penting dalam Memilih Oli', type: 'select', required: true, options: ['Harga murah', 'Kualitas terbaik', 'Rekomendasi mekanik', 'Merk terkenal', 'Sesuai manual motor'] },
                         { name: 'komentar', label: 'Saran atau Komentar Tambahan', type: 'textarea', required: false, placeholder: 'Tuliskan saran, pengalaman, atau komentar Anda tentang penggunaan oli motor...' }
+                    ]
+                },
+
             ];
-        
+        }
+
         // Survey template for teachers
         function getTeacherTemplate() {
             return [
@@ -470,7 +959,7 @@
                     id: 'personal',
                     title: 'Data Pribadi Guru',
                     color: 'pink',
-                    icon: '',
+                    icon: '👩‍🏫',
                     description: 'Informasi dasar tentang guru responden',
                     fields: [
                         { name: 'nama', label: 'Nama Lengkap', type: 'text', required: true, placeholder: 'Masukkan nama lengkap Anda' },
@@ -483,20 +972,21 @@
                     id: 'vehicle',
                     title: 'Data Kendaraan Motor Guru',
                     color: 'green',
-                    icon: '',
+                    icon: '🏍️',
                     description: 'Informasi tentang motor yang digunakan untuk perjalanan ke sekolah',
                     fields: [
                         { name: 'merk', label: 'Merk Motor', type: 'select', required: true, options: ['Honda', 'Yamaha', 'Suzuki', 'Kawasaki', 'TVS', 'Lainnya'] },
                         { name: 'tipe', label: 'Tipe/Model', type: 'text', required: true, placeholder: 'Contoh: Vario 125, NMAX, PCX, Beat' },
                         { name: 'tahun', label: 'Tahun Pembuatan', type: 'number', required: true, min: 2000, max: 2024, placeholder: 'Tahun pembuatan motor' },
                         { name: 'cc', label: 'Kapasitas Mesin (CC)', type: 'select', required: true, options: ['110-125 CC', '150-160 CC', '200-250 CC', '>250 CC'] },
+
                     ]
                 },
                 {
                     id: 'usage',
                     title: 'Kebiasaan Penggunaan Motor untuk Mengajar',
                     color: 'yellow',
-                    icon: '',
+                    icon: '🛣️',
                     description: 'Pola penggunaan motor untuk aktivitas mengajar dan sekolah',
                     fields: [
                         { name: 'jarak_rumah_sekolah', label: 'Jarak Rumah ke Sekolah (KM)', type: 'select', required: true, options: ['Kurang dari 5 KM', '5-10 KM', '10-20 KM', '20-30 KM', 'Lebih dari 30 KM'] },
@@ -510,11 +1000,11 @@
                     id: 'oil',
                     title: 'Kebiasaan Perawatan Oli Motor Guru',
                     color: 'purple',
-                    icon: '',
+                    icon: '🛢️',
                     description: 'Kebiasaan dalam perawatan dan penggantian oli sebagai guru',
                     fields: [
                         { name: 'merk_oli', label: 'Merk Oli yang Biasa Digunakan', type: 'text', required: true, placeholder: 'Contoh: Castrol, Shell, Yamalube, Motul, Enduro' },
-                        { name: 'jenis_oli', label: 'Jenis Oli', type: 'select', required: true, options: ['Mineral', 'Semi Sintetik', 'Full Sintetik', 'Tidak tahu'] },
+
                         { name: 'frekuensi_ganti', label: 'Frekuensi Ganti Oli', type: 'select', required: true, options: ['Setiap 1000 KM', 'Setiap 2000 KM', 'Setiap 3000 KM', 'Setiap 4000+ KM', 'Berdasarkan bulan (1-2 bulan)', 'Tidak teratur'] },
                         { name: 'budget_oli', label: 'Budget Oli per Bulan', type: 'select', required: true, options: ['Kurang dari Rp 75.000', 'Rp 75.000 - 150.000', 'Rp 150.000 - 250.000', 'Lebih dari Rp 250.000'] },
                         { name: 'tempat_ganti_oli', label: 'Tempat Biasa Ganti Oli', type: 'select', required: true, options: ['Bengkel resmi', 'Bengkel langganan', 'Ganti sendiri', 'Bengkel terdekat sekolah', 'Bervariasi'] }
@@ -524,12 +1014,12 @@
                     id: 'problems',
                     title: 'Masalah dan Preferensi Guru',
                     color: 'red',
-                    icon: '',
+                    icon: '⚙️',
                     description: 'Masalah yang dialami dan preferensi dalam memilih oli sebagai guru',
                     fields: [
                         { name: 'masalah', label: 'Masalah yang Sering Dialami', type: 'checkbox', required: false, options: ['Oli cepat habis karena sering dipakai', 'Mesin panas saat macet', 'Suara mesin kasar', 'Oli mengental', 'Performa menurun saat hujan', 'Tidak ada masalah'] },
                         { name: 'faktor_penting', label: 'Faktor Penting dalam Memilih Oli', type: 'select', required: true, options: ['Harga terjangkau dengan gaji guru', 'Kualitas tahan lama', 'Rekomendasi bengkel', 'Merk terpercaya', 'Cocok untuk perjalanan harian', 'Mudah didapat'] },
-                        { name: 'pengaruh_cuaca', label: 'Pengaruh Cuaca terhadap Performa Motor', type: 'select', required: true, options: ['Sangat berpengaruh', 'Cukup berpengaruh', 'Sedikit berpengaruh', 'Tidak berpengaruh'] },
+
                         { name: 'saran_siswa', label: 'Apakah Anda memberikan saran tentang perawatan motor kepada siswa?', type: 'select', required: true, options: ['Sering memberikan saran', 'Kadang-kadang', 'Jarang', 'Tidak pernah'] },
                         { name: 'komentar', label: 'Saran atau Pengalaman sebagai Guru Pengguna Motor', type: 'textarea', required: false, placeholder: 'Bagikan pengalaman Anda sebagai guru dalam menggunakan motor untuk mengajar, tips perawatan, atau saran untuk sesama guru...' }
                     ]
@@ -543,13 +1033,14 @@
                 currentUser = { role: 'student' };
                 showInterface('student');
                 loadStudentSurvey();
+            } else if (role === 'teacher') {
+                currentUser = { role: 'teacher' };
+                showInterface('teacher');
+                loadTeacherSurvey();
             }
         }
 
-        function showTeacherLogin() {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('teacher-login').classList.remove('hidden');
-        }
+
 
         function showAdminLogin() {
             document.getElementById('login-screen').classList.add('hidden');
@@ -557,25 +1048,11 @@
         }
 
         function backToLogin() {
-            document.getElementById('teacher-login').classList.add('hidden');
             document.getElementById('admin-login').classList.add('hidden');
             document.getElementById('login-screen').classList.remove('hidden');
         }
 
-        // Teacher login form
-        document.getElementById('teacher-login-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const username = document.getElementById('teacher-username').value;
-            const password = document.getElementById('teacher-password').value;
-            
-            if (username === 'guru' && password === 'admin123') {
-                currentUser = { role: 'teacher', username: username };
-                showInterface('teacher');
-                loadTeacherSurvey();
-            } else {
-                alert('? Username atau password salah!');
-            }
-        });
+
 
         // Admin login form
         document.getElementById('admin-login-form').addEventListener('submit', function(e) {
@@ -583,7 +1060,7 @@
             const username = document.getElementById('admin-username').value;
             const password = document.getElementById('admin-password').value;
             
-            if (username === 'admin' && password === 'superadmin123') {
+            if (username === 'Hubin' && password === '20271153') {
                 currentUser = { 
                     role: 'admin', 
                     username: username,
@@ -592,20 +1069,22 @@
                 
                 showInterface('admin');
                 loadAdminDashboard();
+                showNotification(`Selamat datang, ${username}!`, 'success');
             } else {
-                alert('? Username atau password salah!');
+                showNotification('Username atau password salah!', 'error');
             }
         });
 
         function logout() {
+            const username = currentUser ? currentUser.username || 'Pengguna' : 'Pengguna';
             currentUser = null;
             showInterface('login');
+            showNotification('Anda telah logout berhasil!', 'info');
         }
 
         function showInterface(type) {
             // Hide all interfaces
             document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('teacher-login').classList.add('hidden');
             document.getElementById('admin-login').classList.add('hidden');
             document.getElementById('student-interface').classList.add('hidden');
             document.getElementById('teacher-interface').classList.add('hidden');
@@ -628,11 +1107,14 @@
             const container = document.getElementById('dynamic-survey-fields');
             let html = '';
 
-            surveyTemplate.forEach(section => {
+            surveyTemplate.forEach((section, index) => {
+                const sectionId = `section-${section.id}`;
+                const hideClass = index > 0 ? 'hidden' : ''; // Hide all sections except first one initially
+                
                 html += `
-                    <div class="bg-${section.color}-50 p-6 rounded-lg border border-${section.color}-200">
+                    <div id="${sectionId}" class="bg-${section.color}-50 p-6 rounded-lg border border-${section.color}-200 ${hideClass}">
                         <div class="flex items-center mb-3">
-                            <span class="text-2xl mr-3">${section.icon || ''}</span>
+                            <span class="text-2xl mr-3">${section.icon || '📝'}</span>
                             <div>
                                 <h3 class="text-lg font-semibold text-${section.color}-800">${section.title}</h3>
                                 <p class="text-sm text-${section.color}-600">${section.description || ''}</p>
@@ -642,7 +1124,7 @@
                 `;
 
                 section.fields.forEach(field => {
-                    html += generateFieldHTML(field);
+                    html += generateFieldHTML(field, section.id);
                 });
 
                 html += `
@@ -652,6 +1134,14 @@
             });
 
             container.innerHTML = html;
+            
+            // Add event listener for motor ownership change
+            setTimeout(() => {
+                const motorSelect = document.querySelector('select[name="kepemilikan_motor"]');
+                if (motorSelect) {
+                    motorSelect.addEventListener('change', handleMotorOwnershipChange);
+                }
+            }, 100);
         }
 
         // Teacher survey functions
@@ -664,7 +1154,7 @@
                 html += `
                     <div class="bg-${section.color}-50 p-6 rounded-lg border border-${section.color}-200">
                         <div class="flex items-center mb-3">
-                            <span class="text-2xl mr-3">${section.icon || ''}</span>
+                            <span class="text-2xl mr-3">${section.icon || '📝'}</span>
                             <div>
                                 <h3 class="text-lg font-semibold text-${section.color}-800">${section.title}</h3>
                                 <p class="text-sm text-${section.color}-600">${section.description || ''}</p>
@@ -686,7 +1176,38 @@
             container.innerHTML = html;
         }
 
-        function generateFieldHTML(field) {
+        function handleMotorOwnershipChange() {
+            const motorSelect = document.querySelector('select[name="kepemilikan_motor"]');
+            const submitButton = document.querySelector('#student-survey-form button[type="submit"]');
+            const allSections = document.querySelectorAll('[id^="section-"]');
+            
+            if (motorSelect.value === 'Tidak, saya tidak memiliki kendaraan motor') {
+                // Hide all sections except personal data
+                allSections.forEach(section => {
+                    if (!section.id.includes('personal')) {
+                        section.classList.add('hidden');
+                    }
+                });
+                
+                // Change submit button text
+                submitButton.innerHTML = '📤 Kirim Survei (Tanpa Motor)';
+                submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                submitButton.classList.add('bg-green-600', 'hover:bg-green-700');
+                
+            } else if (motorSelect.value === 'Ya, saya memiliki kendaraan motor') {
+                // Show all sections
+                allSections.forEach(section => {
+                    section.classList.remove('hidden');
+                });
+                
+                // Reset submit button
+                submitButton.innerHTML = '📤 Kirim Survei';
+                submitButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+                submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            }
+        }
+
+        function generateFieldHTML(field, sectionId) {
             let html = `
                 <div ${field.type === 'checkbox' ? 'class="md:col-span-2"' : ''}>
                     <label class="block text-sm font-medium text-gray-700 mb-2">${field.label}</label>
@@ -754,16 +1275,35 @@
             data.id = Date.now();
             data.tanggal = new Date().toLocaleDateString('id-ID');
             data.waktu = new Date().toLocaleTimeString('id-ID');
+            data.role = 'siswa';
             
-            // Save to spreadsheet data
-            surveyData.push(data);
-            localStorage.setItem('surveyData', JSON.stringify(surveyData));
-            
-            // Auto-save to spreadsheet format
-            saveToSpreadsheet(data);
-            
-            alert('? Survei berhasil dikirim dan tersimpan ke spreadsheet! Terima kasih atas partisipasinya.');
-            this.reset();
+            // Show progress and then success message
+            showProgressAndSuccess(data, () => {
+                // Save to spreadsheet data
+                surveyData.push(data);
+                localStorage.setItem('surveyData', JSON.stringify(surveyData));
+                
+                // Auto-save to spreadsheet format
+                saveToSpreadsheet(data);
+                
+                this.reset();
+                
+                // Reset form display
+                const allSections = document.querySelectorAll('[id^="section-"]');
+                allSections.forEach((section, index) => {
+                    if (index === 0) {
+                        section.classList.remove('hidden');
+                    } else {
+                        section.classList.add('hidden');
+                    }
+                });
+                
+                // Reset submit button
+                const submitButton = document.querySelector('#student-survey-form button[type="submit"]');
+                submitButton.innerHTML = '📤 Kirim Survei';
+                submitButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+                submitButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            });
         });
 
         // Teacher form submission - SAVE TO SPREADSHEET
@@ -797,15 +1337,17 @@
             data.waktu = new Date().toLocaleTimeString('id-ID');
             data.role = 'guru'; // Mark as teacher response
             
-            // Save to spreadsheet data
-            surveyData.push(data);
-            localStorage.setItem('surveyData', JSON.stringify(surveyData));
-            
-            // Auto-save to spreadsheet format
-            saveToSpreadsheet(data);
-            
-            alert('? Survei guru berhasil dikirim dan tersimpan ke spreadsheet! Terima kasih atas partisipasinya.');
-            this.reset();
+            // Show progress and then success message
+            showProgressAndSuccess(data, () => {
+                // Save to spreadsheet data
+                surveyData.push(data);
+                localStorage.setItem('surveyData', JSON.stringify(surveyData));
+                
+                // Auto-save to spreadsheet format
+                saveToSpreadsheet(data);
+                
+                this.reset();
+            });
         });
 
         // Spreadsheet functions
@@ -830,7 +1372,7 @@
                 return `
                     <div class="flex items-center justify-center h-64 text-gray-500">
                         <div class="text-center">
-                            <div class="text-4xl mb-4"></div>
+                            <div class="text-4xl mb-4">📊</div>
                             <p>Belum ada data survei</p>
                             <p class="text-sm">Data akan muncul setelah siswa mengisi survei</p>
                         </div>
@@ -886,18 +1428,61 @@
         }
 
         function refreshSpreadsheet() {
+            showAdminProgress('Memuat ulang data spreadsheet...', () => {
+                const spreadsheetData = JSON.parse(localStorage.getItem('spreadsheetData')) || surveyData;
+                const metadata = JSON.parse(localStorage.getItem('spreadsheetMetadata')) || {};
+                
+                // Update metadata display
+                document.getElementById('spreadsheet-total-rows').textContent = spreadsheetData.length;
+                document.getElementById('spreadsheet-total-columns').textContent = spreadsheetData.length > 0 ? Object.keys(spreadsheetData[0]).length : 0;
+                document.getElementById('spreadsheet-last-updated').textContent = metadata.lastUpdated ? new Date(metadata.lastUpdated).toLocaleString('id-ID') : '-';
+                document.getElementById('spreadsheet-file-size').textContent = metadata.fileSize ? Math.round(metadata.fileSize / 1024) + ' KB' : '0 KB';
+                
+                // Reset filtered data
+                filteredSpreadsheetData = spreadsheetData;
+                document.getElementById('spreadsheet-search').value = '';
+                document.getElementById('search-results-info').textContent = '';
+                
+                // Generate and display spreadsheet
+                const container = document.getElementById('spreadsheet-container');
+                container.innerHTML = generateSpreadsheetHTML(spreadsheetData);
+                
+                showNotification('Data spreadsheet berhasil diperbarui!', 'success');
+            });
+        }
+
+        function searchSpreadsheet() {
+            const searchTerm = document.getElementById('spreadsheet-search').value.toLowerCase();
             const spreadsheetData = JSON.parse(localStorage.getItem('spreadsheetData')) || surveyData;
-            const metadata = JSON.parse(localStorage.getItem('spreadsheetMetadata')) || {};
             
-            // Update metadata display
-            document.getElementById('spreadsheet-total-rows').textContent = spreadsheetData.length;
-            document.getElementById('spreadsheet-total-columns').textContent = spreadsheetData.length > 0 ? Object.keys(spreadsheetData[0]).length : 0;
-            document.getElementById('spreadsheet-last-updated').textContent = metadata.lastUpdated ? new Date(metadata.lastUpdated).toLocaleString('id-ID') : '-';
-            document.getElementById('spreadsheet-file-size').textContent = metadata.fileSize ? Math.round(metadata.fileSize / 1024) + ' KB' : '0 KB';
+            if (!searchTerm) {
+                filteredSpreadsheetData = spreadsheetData;
+                document.getElementById('search-results-info').textContent = '';
+            } else {
+                filteredSpreadsheetData = spreadsheetData.filter(row => {
+                    return Object.values(row).some(value => 
+                        String(value).toLowerCase().includes(searchTerm)
+                    );
+                });
+                
+                document.getElementById('search-results-info').textContent = 
+                    `Menampilkan ${filteredSpreadsheetData.length} dari ${spreadsheetData.length} data untuk "${searchTerm}"`;
+            }
             
-            // Generate and display spreadsheet
+            const container = document.getElementById('spreadsheet-container');
+            container.innerHTML = generateSpreadsheetHTML(filteredSpreadsheetData);
+        }
+
+        function clearSearch() {
+            document.getElementById('spreadsheet-search').value = '';
+            const spreadsheetData = JSON.parse(localStorage.getItem('spreadsheetData')) || surveyData;
+            filteredSpreadsheetData = spreadsheetData;
+            document.getElementById('search-results-info').textContent = '';
+            
             const container = document.getElementById('spreadsheet-container');
             container.innerHTML = generateSpreadsheetHTML(spreadsheetData);
+            
+            showNotification('Pencarian dibersihkan', 'info');
         }
 
         function refreshTeacherSpreadsheet() {
@@ -906,34 +1491,44 @@
         }
 
         function exportSpreadsheet() {
-            const spreadsheetData = JSON.parse(localStorage.getItem('spreadsheetData')) || surveyData;
-            if (spreadsheetData.length === 0) {
-                alert('Tidak ada data untuk diekspor');
+            const dataToExport = filteredSpreadsheetData.length > 0 ? filteredSpreadsheetData : 
+                                (JSON.parse(localStorage.getItem('spreadsheetData')) || surveyData);
+            
+            if (dataToExport.length === 0) {
+                showNotification('Tidak ada data untuk diekspor', 'warning');
                 return;
             }
 
-            const csvContent = convertToCSV(spreadsheetData);
-            downloadCSV(csvContent, 'spreadsheet_survei_oli_motor');
+            showAdminProgress(`Mengekspor ${dataToExport.length} baris data ke CSV...`, () => {
+                const csvContent = convertToCSV(dataToExport);
+                downloadCSV(csvContent, 'spreadsheet_survei_oli_motor');
+                showNotification(`Data berhasil diekspor! (${dataToExport.length} baris)`, 'success');
+            }, 1800);
         }
 
         function exportTeacherSpreadsheet() {
             if (surveyData.length === 0) {
-                alert('Tidak ada data untuk diekspor');
+                showNotification('Tidak ada data untuk diekspor', 'warning');
                 return;
             }
 
             const csvContent = convertToCSV(surveyData);
             downloadCSV(csvContent, 'teacher_spreadsheet_survei_oli_motor');
+            showNotification(`Data guru berhasil diekspor! (${surveyData.length} baris)`, 'success');
         }
 
         function clearSpreadsheet() {
             if (confirm('Hapus SEMUA data spreadsheet? Tindakan ini tidak dapat dibatalkan!')) {
-                localStorage.removeItem('spreadsheetData');
-                localStorage.removeItem('spreadsheetMetadata');
-                surveyData = [];
-                localStorage.setItem('surveyData', JSON.stringify(surveyData));
-                refreshSpreadsheet();
-                alert('? Semua data spreadsheet berhasil dihapus!');
+                const dataCount = surveyData.length;
+                showAdminProgress('Menghapus semua data spreadsheet...', () => {
+                    localStorage.removeItem('spreadsheetData');
+                    localStorage.removeItem('spreadsheetMetadata');
+                    surveyData = [];
+                    localStorage.setItem('surveyData', JSON.stringify(surveyData));
+                    refreshSpreadsheet();
+                    loadAdminDashboard(); // Refresh dashboard stats
+                    showNotification(`Semua data spreadsheet berhasil dihapus! (${dataCount} data)`, 'success');
+                }, 2500);
             }
         }
 
@@ -971,18 +1566,527 @@
 
         // Admin functions
         function loadAdminDashboard() {
-            document.getElementById('admin-total-surveys').textContent = surveyData.length;
+            showAdminProgress('Memuat dashboard administrator...', () => {
+                const totalSurveys = surveyData.length;
+                const studentSurveys = surveyData.filter(item => item.role === 'siswa').length;
+                const teacherSurveys = surveyData.filter(item => item.role === 'guru').length;
+                
+                document.getElementById('admin-total-surveys').textContent = totalSurveys;
+                document.getElementById('admin-total-students').textContent = studentSurveys;
+                document.getElementById('admin-total-teachers').textContent = teacherSurveys;
+                
+                const today = new Date().toDateString();
+                const todaySurveys = surveyData.filter(item => 
+                    new Date(item.timestamp).toDateString() === today
+                ).length;
+                document.getElementById('admin-today-surveys').textContent = todaySurveys;
+                
+                document.getElementById('admin-login-time').textContent = new Date().toLocaleTimeString('id-ID');
+                
+                // Load analytics charts
+                loadTransportationChart();
+                loadOwnershipChart();
+                loadMotorBrandChart();
+                loadOilBrandChart();
+                loadOilFrequencyChart();
+                loadDailyDistanceChart();
+                loadOilFactorsChart();
+                
+                updateSystemInfo();
+                setInterval(updateUptime, 60000);
+            }, 1200);
+        }
+
+        // Analytics Functions
+        function loadTransportationChart() {
+            const transportationData = {};
+            surveyData.forEach(item => {
+                if (item.moda_transportasi) {
+                    transportationData[item.moda_transportasi] = (transportationData[item.moda_transportasi] || 0) + 1;
+                }
+            });
+
+            const chartContainer = document.getElementById('transportation-chart');
+            if (Object.keys(transportationData).length === 0) {
+                chartContainer.innerHTML = `
+                    <div class="flex items-center justify-center h-full text-gray-500">
+                        <div class="text-center">
+                            <div class="text-4xl mb-2">📊</div>
+                            <p>Grafik akan muncul setelah ada data survei</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const maxValue = Math.max(...Object.values(transportationData));
+            let html = '<div class="space-y-3">';
             
-            const today = new Date().toDateString();
-            const todaySurveys = surveyData.filter(item => 
-                new Date(item.timestamp).toDateString() === today
-            ).length;
-            document.getElementById('admin-today-surveys').textContent = todaySurveys;
+            Object.entries(transportationData).forEach(([transport, count]) => {
+                const percentage = (count / maxValue) * 100;
+                const color = getTransportColor(transport);
+                html += `
+                    <div class="flex items-center space-x-3">
+                        <div class="w-24 text-sm font-medium text-gray-700 truncate" title="${transport}">${transport}</div>
+                        <div class="flex-1 bg-gray-200 rounded-full h-6 relative">
+                            <div class="bg-${color}-500 h-6 rounded-full flex items-center justify-end pr-2" style="width: ${percentage}%">
+                                <span class="text-white text-xs font-bold">${count}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            chartContainer.innerHTML = html;
+        }
+
+        function loadOwnershipChart() {
+            const ownershipData = { 'Memiliki Motor': 0, 'Tidak Memiliki Motor': 0 };
+            surveyData.forEach(item => {
+                if (item.kepemilikan_motor) {
+                    if (item.kepemilikan_motor.includes('Ya')) {
+                        ownershipData['Memiliki Motor']++;
+                    } else {
+                        ownershipData['Tidak Memiliki Motor']++;
+                    }
+                }
+            });
+
+            const chartContainer = document.getElementById('ownership-chart');
+            const total = ownershipData['Memiliki Motor'] + ownershipData['Tidak Memiliki Motor'];
             
-            document.getElementById('admin-login-time').textContent = new Date().toLocaleTimeString('id-ID');
+            if (total === 0) {
+                chartContainer.innerHTML = `
+                    <div class="flex items-center justify-center h-full text-gray-500">
+                        <div class="text-center">
+                            <div class="text-4xl mb-2">🥧</div>
+                            <p>Grafik akan muncul setelah ada data survei</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const motorPercentage = (ownershipData['Memiliki Motor'] / total) * 100;
+            const noMotorPercentage = (ownershipData['Tidak Memiliki Motor'] / total) * 100;
+
+            chartContainer.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex justify-center">
+                        <div class="relative w-32 h-32">
+                            <svg class="w-32 h-32 transform -rotate-90" viewBox="0 0 36 36">
+                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      fill="none" stroke="#e5e7eb" stroke-width="3"/>
+                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      fill="none" stroke="#3b82f6" stroke-width="3"
+                                      stroke-dasharray="${motorPercentage}, 100"/>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-lg font-bold text-gray-700">${total}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                                <span class="text-sm">Memiliki Motor</span>
+                            </div>
+                            <span class="text-sm font-bold">${ownershipData['Memiliki Motor']} (${motorPercentage.toFixed(1)}%)</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-3 h-3 bg-gray-300 rounded-full"></div>
+                                <span class="text-sm">Tidak Memiliki Motor</span>
+                            </div>
+                            <span class="text-sm font-bold">${ownershipData['Tidak Memiliki Motor']} (${noMotorPercentage.toFixed(1)}%)</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getTransportColor(transport) {
+            const colors = {
+                'Motor': 'blue',
+                'Jalan kaki': 'green',
+                'Sepeda': 'yellow',
+                'Mobil pribadi': 'purple',
+                'Angkutan umum': 'red',
+                'Lainnya': 'gray'
+            };
+            return colors[transport] || 'gray';
+        }
+
+        // Motor Brand Chart
+        function loadMotorBrandChart() {
+            const motorBrandData = {};
+            surveyData.forEach(item => {
+                if (item.merk && item.kepemilikan_motor && item.kepemilikan_motor.includes('Ya')) {
+                    motorBrandData[item.merk] = (motorBrandData[item.merk] || 0) + 1;
+                }
+            });
+
+            const chartContainer = document.getElementById('motor-brand-chart');
+            if (Object.keys(motorBrandData).length === 0) {
+                chartContainer.innerHTML = `
+                    <div class="flex items-center justify-center h-full text-gray-500">
+                        <div class="text-center">
+                            <div class="text-4xl mb-2">🏍️</div>
+                            <p>Grafik akan muncul setelah ada data survei</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const maxValue = Math.max(...Object.values(motorBrandData));
+            let html = '<div class="space-y-3">';
             
-            updateSystemInfo();
-            setInterval(updateUptime, 60000);
+            const brandColors = {
+                'Honda': 'red',
+                'Yamaha': 'blue',
+                'Suzuki': 'yellow',
+                'Kawasaki': 'green',
+                'TVS': 'purple',
+                'Lainnya': 'gray'
+            };
+            
+            Object.entries(motorBrandData).forEach(([brand, count]) => {
+                const percentage = (count / maxValue) * 100;
+                const color = brandColors[brand] || 'gray';
+                html += `
+                    <div class="flex items-center space-x-3">
+                        <div class="w-20 text-sm font-medium text-gray-700 truncate" title="${brand}">${brand}</div>
+                        <div class="flex-1 bg-gray-200 rounded-full h-6 relative">
+                            <div class="bg-${color}-500 h-6 rounded-full flex items-center justify-end pr-2" style="width: ${percentage}%">
+                                <span class="text-white text-xs font-bold">${count}</span>
+                            </div>
+                        </div>
+                        <div class="text-xs text-gray-500 w-12">${((count / Object.values(motorBrandData).reduce((a, b) => a + b, 0)) * 100).toFixed(1)}%</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            chartContainer.innerHTML = html;
+        }
+
+        // Oil Brand Chart (Pie Chart)
+        function loadOilBrandChart() {
+            const oilBrandData = {};
+            surveyData.forEach(item => {
+                if (item.merk_oli && item.kepemilikan_motor && item.kepemilikan_motor.includes('Ya')) {
+                    // Normalize oil brand names
+                    let brand = item.merk_oli.toLowerCase();
+                    if (brand.includes('shell')) brand = 'Shell';
+                    else if (brand.includes('castrol')) brand = 'Castrol';
+                    else if (brand.includes('yamalube')) brand = 'Yamalube';
+                    else if (brand.includes('motul')) brand = 'Motul';
+                    else if (brand.includes('pertamina') || brand.includes('enduro')) brand = 'Pertamina';
+                    else if (brand.includes('federal')) brand = 'Federal Oil';
+                    else brand = 'Lainnya';
+                    
+                    oilBrandData[brand] = (oilBrandData[brand] || 0) + 1;
+                }
+            });
+
+            const chartContainer = document.getElementById('oil-brand-chart');
+            const total = Object.values(oilBrandData).reduce((a, b) => a + b, 0);
+            
+            if (total === 0) {
+                chartContainer.innerHTML = `
+                    <div class="flex items-center justify-center h-full text-gray-500">
+                        <div class="text-center">
+                            <div class="text-4xl mb-2">🛢️</div>
+                            <p>Grafik akan muncul setelah ada data survei</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const oilColors = {
+                'Shell': 'yellow',
+                'Castrol': 'green',
+                'Yamalube': 'blue',
+                'Motul': 'red',
+                'Pertamina': 'orange',
+                'Federal Oil': 'purple',
+                'Lainnya': 'gray'
+            };
+
+            let html = `
+                <div class="space-y-4">
+                    <div class="flex justify-center">
+                        <div class="relative w-32 h-32">
+                            <svg class="w-32 h-32 transform -rotate-90" viewBox="0 0 36 36">
+                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      fill="none" stroke="#e5e7eb" stroke-width="3"/>
+            `;
+
+            let cumulativePercentage = 0;
+            Object.entries(oilBrandData).forEach(([brand, count], index) => {
+                const percentage = (count / total) * 100;
+                const color = oilColors[brand] || 'gray';
+                html += `
+                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          fill="none" stroke="rgb(${getColorRGB(color)})" stroke-width="3"
+                          stroke-dasharray="${percentage}, 100"
+                          stroke-dashoffset="${-cumulativePercentage}"/>
+                `;
+                cumulativePercentage += percentage;
+            });
+
+            html += `
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-lg font-bold text-gray-700">${total}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-2 max-h-32 overflow-y-auto">
+            `;
+
+            Object.entries(oilBrandData).forEach(([brand, count]) => {
+                const percentage = (count / total) * 100;
+                const color = oilColors[brand] || 'gray';
+                html += `
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 bg-${color}-500 rounded-full"></div>
+                            <span class="truncate" title="${brand}">${brand}</span>
+                        </div>
+                        <span class="font-bold">${count} (${percentage.toFixed(1)}%)</span>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+            chartContainer.innerHTML = html;
+        }
+
+        function getColorRGB(colorName) {
+            const colors = {
+                'yellow': '251, 191, 36',
+                'green': '34, 197, 94',
+                'blue': '59, 130, 246',
+                'red': '239, 68, 68',
+                'orange': '249, 115, 22',
+                'purple': '147, 51, 234',
+                'gray': '107, 114, 128'
+            };
+            return colors[colorName] || '107, 114, 128';
+        }
+
+        // Oil Frequency Chart (Line Chart)
+        function loadOilFrequencyChart() {
+            const frequencyData = {};
+            surveyData.forEach(item => {
+                if (item.frekuensi_ganti && item.kepemilikan_motor && item.kepemilikan_motor.includes('Ya')) {
+                    frequencyData[item.frekuensi_ganti] = (frequencyData[item.frekuensi_ganti] || 0) + 1;
+                }
+            });
+
+            const chartContainer = document.getElementById('oil-frequency-chart');
+            if (Object.keys(frequencyData).length === 0) {
+                chartContainer.innerHTML = `
+                    <div class="flex items-center justify-center h-full text-gray-500">
+                        <div class="text-center">
+                            <div class="text-4xl mb-2">📈</div>
+                            <p>Grafik akan muncul setelah ada data survei</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort frequency data by logical order
+            const frequencyOrder = [
+                'Setiap 1000 KM',
+                'Setiap 2000 KM', 
+                'Setiap 3000 KM',
+                'Setiap 4000+ KM',
+                'Berdasarkan bulan (1-2 bulan)',
+                'Tidak teratur'
+            ];
+
+            const sortedData = frequencyOrder
+                .filter(freq => frequencyData[freq])
+                .map(freq => ({ frequency: freq, count: frequencyData[freq] }));
+
+            const maxValue = Math.max(...Object.values(frequencyData));
+            
+            let html = `
+                <div class="space-y-4">
+                    <div class="relative h-40 flex items-end justify-between px-4">
+            `;
+
+            // Create line chart points
+            const points = [];
+            sortedData.forEach((item, index) => {
+                const height = (item.count / maxValue) * 120;
+                const x = (index / (sortedData.length - 1)) * 100;
+                points.push(`${x},${120 - height}`);
+                
+                html += `
+                    <div class="flex flex-col items-center" style="position: absolute; left: ${x}%; bottom: 0;">
+                        <div class="w-3 h-3 bg-blue-500 rounded-full mb-2" style="margin-bottom: ${height}px;"></div>
+                        <div class="text-xs text-center font-bold text-blue-600">${item.count}</div>
+                    </div>
+                `;
+            });
+
+            // Add line connecting points
+            if (points.length > 1) {
+                html += `
+                    <svg class="absolute inset-0 w-full h-full pointer-events-none" style="top: 20px;">
+                        <polyline points="${points.join(' ')}" 
+                                  fill="none" 
+                                  stroke="rgb(59, 130, 246)" 
+                                  stroke-width="2"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"/>
+                    </svg>
+                `;
+            }
+
+            html += `
+                    </div>
+                    <div class="space-y-1 text-xs">
+            `;
+
+            sortedData.forEach(item => {
+                const shortLabel = item.frequency.replace('Setiap ', '').replace(' KM', '');
+                html += `
+                    <div class="flex justify-between">
+                        <span class="truncate" title="${item.frequency}">${shortLabel}</span>
+                        <span class="font-bold">${item.count}</span>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+            chartContainer.innerHTML = html;
+        }
+
+        // Daily Distance Chart
+        function loadDailyDistanceChart() {
+            const distanceData = {};
+            surveyData.forEach(item => {
+                if (item.jarak_harian && item.kepemilikan_motor && item.kepemilikan_motor.includes('Ya')) {
+                    distanceData[item.jarak_harian] = (distanceData[item.jarak_harian] || 0) + 1;
+                }
+            });
+
+            const chartContainer = document.getElementById('daily-distance-chart');
+            if (Object.keys(distanceData).length === 0) {
+                chartContainer.innerHTML = `
+                    <div class="flex items-center justify-center h-full text-gray-500">
+                        <div class="text-center">
+                            <div class="text-4xl mb-2">🛣️</div>
+                            <p>Grafik akan muncul setelah ada data survei</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const maxValue = Math.max(...Object.values(distanceData));
+            let html = '<div class="space-y-3">';
+            
+            const distanceColors = {
+                'Kurang dari 10 KM': 'green',
+                'Kurang dari 5 KM': 'green',
+                '10-20 KM': 'yellow',
+                '5-10 KM': 'yellow',
+                '20-50 KM': 'orange',
+                '10-20 KM': 'orange',
+                'Lebih dari 50 KM': 'red',
+                'Lebih dari 30 KM': 'red'
+            };
+            
+            Object.entries(distanceData).forEach(([distance, count]) => {
+                const percentage = (count / maxValue) * 100;
+                const color = distanceColors[distance] || 'blue';
+                html += `
+                    <div class="flex items-center space-x-3">
+                        <div class="w-24 text-sm font-medium text-gray-700 truncate" title="${distance}">${distance}</div>
+                        <div class="flex-1 bg-gray-200 rounded-full h-6 relative">
+                            <div class="bg-${color}-500 h-6 rounded-full flex items-center justify-end pr-2" style="width: ${percentage}%">
+                                <span class="text-white text-xs font-bold">${count}</span>
+                            </div>
+                        </div>
+                        <div class="text-xs text-gray-500 w-12">${((count / Object.values(distanceData).reduce((a, b) => a + b, 0)) * 100).toFixed(1)}%</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            chartContainer.innerHTML = html;
+        }
+
+        // Oil Factors Chart
+        function loadOilFactorsChart() {
+            const factorsData = {};
+            surveyData.forEach(item => {
+                if (item.faktor_penting && item.kepemilikan_motor && item.kepemilikan_motor.includes('Ya')) {
+                    factorsData[item.faktor_penting] = (factorsData[item.faktor_penting] || 0) + 1;
+                }
+            });
+
+            const chartContainer = document.getElementById('oil-factors-chart');
+            if (Object.keys(factorsData).length === 0) {
+                chartContainer.innerHTML = `
+                    <div class="flex items-center justify-center h-full text-gray-500">
+                        <div class="text-center">
+                            <div class="text-4xl mb-2">💰</div>
+                            <p>Grafik akan muncul setelah ada data survei</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const maxValue = Math.max(...Object.values(factorsData));
+            let html = '<div class="space-y-3">';
+            
+            const factorColors = {
+                'Harga murah': 'green',
+                'Harga terjangkau dengan gaji guru': 'green',
+                'Kualitas terbaik': 'blue',
+                'Kualitas tahan lama': 'blue',
+                'Rekomendasi mekanik': 'yellow',
+                'Rekomendasi bengkel': 'yellow',
+                'Merk terkenal': 'purple',
+                'Merk terpercaya': 'purple',
+                'Sesuai manual motor': 'red',
+                'Cocok untuk perjalanan harian': 'red',
+                'Mudah didapat': 'orange'
+            };
+            
+            Object.entries(factorsData).forEach(([factor, count]) => {
+                const percentage = (count / maxValue) * 100;
+                const color = factorColors[factor] || 'gray';
+                const shortFactor = factor.length > 20 ? factor.substring(0, 20) + '...' : factor;
+                html += `
+                    <div class="flex items-center space-x-3">
+                        <div class="w-28 text-sm font-medium text-gray-700 truncate" title="${factor}">${shortFactor}</div>
+                        <div class="flex-1 bg-gray-200 rounded-full h-6 relative">
+                            <div class="bg-${color}-500 h-6 rounded-full flex items-center justify-end pr-2" style="width: ${percentage}%">
+                                <span class="text-white text-xs font-bold">${count}</span>
+                            </div>
+                        </div>
+                        <div class="text-xs text-gray-500 w-12">${((count / Object.values(factorsData).reduce((a, b) => a + b, 0)) * 100).toFixed(1)}%</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            chartContainer.innerHTML = html;
         }
 
         function showAdminTab(tabName) {
@@ -990,6 +2094,7 @@
             document.getElementById('admin-dashboard-tab').classList.add('hidden');
             document.getElementById('admin-spreadsheet-tab').classList.add('hidden');
             document.getElementById('admin-users-tab').classList.add('hidden');
+            document.getElementById('admin-editor-tab').classList.add('hidden');
             document.getElementById('admin-system-tab').classList.add('hidden');
 
             // Show selected tab
@@ -1008,6 +2113,8 @@
                 refreshSpreadsheet();
             } else if (tabName === 'users') {
                 loadUsersList();
+            } else if (tabName === 'editor') {
+                loadWebsiteEditor();
             }
         }
 
@@ -1015,7 +2122,7 @@
             const usersList = document.getElementById('admin-users-list');
             const users = [
                 { username: 'guru', role: 'teacher', status: 'active', lastLogin: 'Hari ini' },
-                { username: 'admin', role: 'admin', status: 'active', lastLogin: 'Sekarang' }
+                { username: 'Hubin', role: 'admin', status: 'active', lastLogin: 'Sekarang' }
             ];
 
             let html = '';
@@ -1030,10 +2137,10 @@
                             </div>
                             <div class="space-x-2">
                                 <button onclick="editUser('${user.username}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
-                                     Edit
+                                    ✏️ Edit
                                 </button>
                                 <button onclick="deleteUser('${user.username}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
-                                     Hapus
+                                    🗑️ Hapus
                                 </button>
                             </div>
                         </div>
@@ -1062,25 +2169,32 @@
         }
 
         function backupAllData() {
-            const backupData = {
-                surveyData: surveyData,
-                surveyTemplate: surveyTemplate,
-                spreadsheetData: JSON.parse(localStorage.getItem('spreadsheetData')) || [],
-                spreadsheetMetadata: JSON.parse(localStorage.getItem('spreadsheetMetadata')) || {},
-                timestamp: new Date().toISOString()
-            };
-            
-            const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', 'survey_system_backup_' + new Date().toISOString().split('T')[0] + '.json');
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            alert('? Backup berhasil dibuat!');
+            showAdminProgress('Membuat backup semua data sistem...', () => {
+                try {
+                    const backupData = {
+                        surveyData: surveyData,
+                        surveyTemplate: surveyTemplate,
+                        spreadsheetData: JSON.parse(localStorage.getItem('spreadsheetData')) || [],
+                        spreadsheetMetadata: JSON.parse(localStorage.getItem('spreadsheetMetadata')) || {},
+                        websiteSettings: websiteSettings,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+                    const link = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', 'survey_system_backup_' + new Date().toISOString().split('T')[0] + '.json');
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    showNotification('Backup berhasil dibuat!', 'success');
+                } catch (error) {
+                    showNotification('Terjadi kesalahan saat membuat backup!', 'error');
+                }
+            }, 2200);
         }
 
         function restoreData() {
@@ -1095,24 +2209,30 @@
                         try {
                             const backupData = JSON.parse(e.target.result);
                             if (confirm('Restore data ini? Data saat ini akan diganti.')) {
-                                surveyData = backupData.surveyData || [];
-                                surveyTemplate = backupData.surveyTemplate || getDefaultTemplate();
-                                
-                                localStorage.setItem('surveyData', JSON.stringify(surveyData));
-                                localStorage.setItem('surveyTemplate', JSON.stringify(surveyTemplate));
-                                
-                                if (backupData.spreadsheetData) {
-                                    localStorage.setItem('spreadsheetData', JSON.stringify(backupData.spreadsheetData));
-                                }
-                                if (backupData.spreadsheetMetadata) {
-                                    localStorage.setItem('spreadsheetMetadata', JSON.stringify(backupData.spreadsheetMetadata));
-                                }
-                                
-                                alert('? Data berhasil direstore!');
-                                loadAdminDashboard();
+                                showAdminProgress('Memulihkan data dari backup...', () => {
+                                    surveyData = backupData.surveyData || [];
+                                    surveyTemplate = backupData.surveyTemplate || getDefaultTemplate();
+                                    
+                                    localStorage.setItem('surveyData', JSON.stringify(surveyData));
+                                    localStorage.setItem('surveyTemplate', JSON.stringify(surveyTemplate));
+                                    
+                                    if (backupData.spreadsheetData) {
+                                        localStorage.setItem('spreadsheetData', JSON.stringify(backupData.spreadsheetData));
+                                    }
+                                    if (backupData.spreadsheetMetadata) {
+                                        localStorage.setItem('spreadsheetMetadata', JSON.stringify(backupData.spreadsheetMetadata));
+                                    }
+                                    if (backupData.websiteSettings) {
+                                        websiteSettings = backupData.websiteSettings;
+                                        localStorage.setItem('websiteSettings', JSON.stringify(websiteSettings));
+                                    }
+                                    
+                                    showNotification('Data berhasil direstore!', 'success');
+                                    loadAdminDashboard();
+                                }, 2800);
                             }
                         } catch (error) {
-                            alert('? File backup tidak valid!');
+                            showNotification('File backup tidak valid!', 'error');
                         }
                     };
                     reader.readAsText(file);
@@ -1124,11 +2244,18 @@
         function clearAllSystemData() {
             if (confirm('Hapus SEMUA data sistem? Tindakan ini tidak dapat dibatalkan!')) {
                 if (confirm('Apakah Anda yakin? Semua data survei, template, dan konfigurasi akan hilang!')) {
-                    localStorage.clear();
-                    surveyData = [];
-                    surveyTemplate = getDefaultTemplate();
-                    alert('? Semua data sistem berhasil dihapus!');
-                    location.reload();
+                    const dataCount = surveyData.length;
+                    showAdminProgress('Menghapus semua data sistem...', () => {
+                        try {
+                            localStorage.clear();
+                            surveyData = [];
+                            surveyTemplate = getDefaultTemplate();
+                            showNotification(`Semua data sistem berhasil dihapus! (${dataCount} data)`, 'success');
+                            setTimeout(() => location.reload(), 2000);
+                        } catch (error) {
+                            showNotification('Terjadi kesalahan saat menghapus data!', 'error');
+                        }
+                    }, 3000);
                 }
             }
         }
@@ -1136,9 +2263,15 @@
         function resetSystem() {
             if (confirm('Reset sistem lengkap? Semua data akan kembali ke pengaturan default!')) {
                 if (confirm('Konfirmasi terakhir: Reset sistem sekarang?')) {
-                    localStorage.clear();
-                    alert('? Sistem berhasil direset!');
-                    location.reload();
+                    showAdminProgress('Mereset sistem ke pengaturan default...', () => {
+                        try {
+                            localStorage.clear();
+                            showNotification('Sistem berhasil direset!', 'success');
+                            setTimeout(() => location.reload(), 2000);
+                        } catch (error) {
+                            showNotification('Terjadi kesalahan saat reset sistem!', 'error');
+                        }
+                    }, 2500);
                 }
             }
         }
@@ -1148,10 +2281,10 @@
             if (username) {
                 const role = prompt('Role (teacher/admin):');
                 if (role === 'teacher' || role === 'admin') {
-                    alert('? Pengguna baru berhasil ditambahkan! (Demo - dalam implementasi nyata akan tersimpan di database)');
+                    alert('✅ Pengguna baru berhasil ditambahkan! (Demo - dalam implementasi nyata akan tersimpan di database)');
                     loadUsersList();
                 } else {
-                    alert('? Role harus teacher atau admin!');
+                    alert('❌ Role harus teacher atau admin!');
                 }
             }
         }
@@ -1162,16 +2295,319 @@
 
         function deleteUser(username) {
             if (confirm(`Hapus pengguna ${username}?`)) {
-                alert('? Pengguna berhasil dihapus! (Demo)');
+                alert('✅ Pengguna berhasil dihapus! (Demo)');
                 loadUsersList();
             }
+        }
+
+        // Website Editor Functions
+        let websiteSettings = JSON.parse(localStorage.getItem('websiteSettings')) || {
+            title: 'Sistem Survei Oli Motor',
+            description: 'Sistem survei untuk mengumpulkan data kebutuhan oli motor siswa dan guru',
+            icon: '🏍️',
+            studentTitle: 'Survei Oli Motor - Siswa',
+            studentDescription: 'Isi survei kebutuhan oli motor Anda',
+            teacherTitle: 'Survei Oli Motor - Guru',
+            teacherDescription: 'Isi survei kebutuhan oli motor khusus untuk guru',
+            formTitle: 'Form Survei',
+            formDescription: 'Silakan isi form survei berikut dengan lengkap',
+            successMessage: 'Terima kasih atas partisipasi Anda dalam survei ini! Kami sangat menghargai waktu dan tanggapan Anda. Data yang Anda berikan akan sangat membantu kami dalam memahami kebutuhan transportasi sekolah dan perawatan kendaraan, sehingga kami dapat meningkatkan layanan untuk siswa dan guru.'
+        };
+
+        function loadWebsiteEditor() {
+            // Load current settings into editor
+            document.getElementById('website-title').value = websiteSettings.title;
+            document.getElementById('website-description').value = websiteSettings.description;
+            document.getElementById('website-icon').value = websiteSettings.icon;
+            document.getElementById('student-title').value = websiteSettings.studentTitle;
+            document.getElementById('student-description').value = websiteSettings.studentDescription;
+            document.getElementById('teacher-title').value = websiteSettings.teacherTitle;
+            document.getElementById('teacher-description').value = websiteSettings.teacherDescription;
+            document.getElementById('form-title').value = websiteSettings.formTitle;
+            document.getElementById('form-description').value = websiteSettings.formDescription;
+            document.getElementById('success-message').value = websiteSettings.successMessage;
+            
+            loadFormEditor();
+        }
+
+        function loadFormEditor() {
+            const formType = document.getElementById('form-selector').value;
+            const template = formType === 'student' ? surveyTemplate : getTeacherTemplate();
+            const sectionsEditor = document.getElementById('sections-editor');
+            
+            let html = '';
+            template.forEach((section, index) => {
+                html += `
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="flex items-center space-x-2">
+                                <input type="text" value="${section.icon}" class="w-12 text-center border border-gray-300 rounded" onchange="updateSectionIcon(${index}, this.value)">
+                                <input type="text" value="${section.title}" class="flex-1 border border-gray-300 rounded px-2 py-1" onchange="updateSectionTitle(${index}, this.value)">
+                            </div>
+                            <div class="space-x-2">
+                                <button onclick="editSection(${index})" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-sm">✏️</button>
+                                <button onclick="deleteSection(${index})" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-sm">🗑️</button>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">${section.description}</p>
+                        <p class="text-xs text-gray-500">${section.fields.length} fields</p>
+                    </div>
+                `;
+            });
+            
+            sectionsEditor.innerHTML = html;
+        }
+
+        function updateSectionIcon(index, icon) {
+            const formType = document.getElementById('form-selector').value;
+            if (formType === 'student') {
+                surveyTemplate[index].icon = icon;
+            } else {
+                // Update teacher template
+                const teacherTemplate = getTeacherTemplate();
+                teacherTemplate[index].icon = icon;
+            }
+        }
+
+        function updateSectionTitle(index, title) {
+            const formType = document.getElementById('form-selector').value;
+            if (formType === 'student') {
+                surveyTemplate[index].title = title;
+            } else {
+                // Update teacher template
+                const teacherTemplate = getTeacherTemplate();
+                teacherTemplate[index].title = title;
+            }
+        }
+
+        function addNewSection() {
+            const newSection = {
+                id: 'custom_' + Date.now(),
+                title: 'Section Baru',
+                color: 'gray',
+                icon: '📝',
+                description: 'Deskripsi section baru',
+                fields: [
+                    { name: 'field_baru', label: 'Field Baru', type: 'text', required: true, placeholder: 'Masukkan data...' }
+                ]
+            };
+            
+            const formType = document.getElementById('form-selector').value;
+            if (formType === 'student') {
+                surveyTemplate.push(newSection);
+            } else {
+                // Add to teacher template (would need to store teacher template separately)
+                alert('Fitur ini akan dikembangkan untuk template guru');
+            }
+            
+            loadFormEditor();
+        }
+
+        function editSection(index) {
+            alert(`Edit section ${index + 1} - Fitur advanced editor akan dikembangkan`);
+        }
+
+        function deleteSection(index) {
+            if (confirm('Hapus section ini?')) {
+                const formType = document.getElementById('form-selector').value;
+                if (formType === 'student') {
+                    surveyTemplate.splice(index, 1);
+                } else {
+                    alert('Fitur ini akan dikembangkan untuk template guru');
+                }
+                loadFormEditor();
+            }
+        }
+
+        function previewChanges() {
+            const modal = document.getElementById('preview-modal');
+            const content = document.getElementById('preview-content');
+            
+            // Get current values
+            const title = document.getElementById('website-title').value;
+            const icon = document.getElementById('website-icon').value;
+            const studentTitle = document.getElementById('student-title').value;
+            const studentDesc = document.getElementById('student-description').value;
+            
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <div class="text-center">
+                        <h1 class="text-3xl font-bold text-gray-800 mb-2">${icon} ${title}</h1>
+                        <p class="text-gray-600">${document.getElementById('website-description').value}</p>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h3 class="font-bold text-blue-800">👨‍🎓 ${studentTitle}</h3>
+                            <p class="text-sm text-blue-600">${studentDesc}</p>
+                        </div>
+                        <div class="bg-pink-50 p-4 rounded-lg">
+                            <h3 class="font-bold text-pink-800">👩‍🏫 ${document.getElementById('teacher-title').value}</h3>
+                            <p class="text-sm text-pink-600">${document.getElementById('teacher-description').value}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h3 class="font-bold text-green-800">📝 ${document.getElementById('form-title').value}</h3>
+                        <p class="text-sm text-green-600">${document.getElementById('form-description').value}</p>
+                    </div>
+                    
+                    <div class="bg-yellow-50 p-4 rounded-lg">
+                        <h3 class="font-bold text-yellow-800">💬 Pesan Sukses</h3>
+                        <p class="text-sm text-yellow-600">${document.getElementById('success-message').value}</p>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closePreview() {
+            document.getElementById('preview-modal').classList.add('hidden');
+        }
+
+        function saveWebsiteChanges() {
+            showAdminProgress('Menyimpan perubahan website...', () => {
+                // Save all settings
+                websiteSettings = {
+                    title: document.getElementById('website-title').value,
+                    description: document.getElementById('website-description').value,
+                    icon: document.getElementById('website-icon').value,
+                    studentTitle: document.getElementById('student-title').value,
+                    studentDescription: document.getElementById('student-description').value,
+                    teacherTitle: document.getElementById('teacher-title').value,
+                    teacherDescription: document.getElementById('teacher-description').value,
+                    formTitle: document.getElementById('form-title').value,
+                    formDescription: document.getElementById('form-description').value,
+                    successMessage: document.getElementById('success-message').value
+                };
+                
+                localStorage.setItem('websiteSettings', JSON.stringify(websiteSettings));
+                localStorage.setItem('surveyTemplate', JSON.stringify(surveyTemplate));
+                
+                // Apply changes to current interface
+                applyWebsiteChanges();
+                
+                showNotification('Perubahan berhasil disimpan!', 'success');
+            }, 1500);
+        }
+
+        function applyWebsiteChanges() {
+            // Update title in login screen
+            const loginTitle = document.querySelector('#login-screen h1');
+            if (loginTitle) {
+                loginTitle.textContent = `${websiteSettings.icon} ${websiteSettings.title}`;
+            }
+            
+            // Update student interface
+            const studentTitle = document.querySelector('#student-interface h1');
+            if (studentTitle) {
+                studentTitle.textContent = `${websiteSettings.icon} ${websiteSettings.studentTitle}`;
+            }
+            
+            // Update teacher interface
+            const teacherTitle = document.querySelector('#teacher-interface h1');
+            if (teacherTitle) {
+                teacherTitle.textContent = `${websiteSettings.icon} ${websiteSettings.teacherTitle}`;
+            }
+        }
+
+        function resetToDefault() {
+            if (confirm('Reset semua pengaturan ke default?')) {
+                showAdminProgress('Mereset pengaturan ke default...', () => {
+                    websiteSettings = {
+                        title: 'Sistem Survei Oli Motor',
+                        description: 'Sistem survei untuk mengumpulkan data kebutuhan oli motor siswa dan guru',
+                        icon: '🏍️',
+                        studentTitle: 'Survei Oli Motor - Siswa',
+                        studentDescription: 'Isi survei kebutuhan oli motor Anda',
+                        teacherTitle: 'Survei Oli Motor - Guru',
+                        teacherDescription: 'Isi survei kebutuhan oli motor khusus untuk guru',
+                        formTitle: 'Form Survei',
+                        formDescription: 'Silakan isi form survei berikut dengan lengkap',
+                        successMessage: 'Terima kasih atas partisipasi Anda dalam survei ini! Kami sangat menghargai waktu dan tanggapan Anda. Data yang Anda berikan akan sangat membantu kami dalam memahami kebutuhan transportasi sekolah dan perawatan kendaraan, sehingga kami dapat meningkatkan layanan untuk siswa dan guru.'
+                    };
+                    
+                    surveyTemplate = getDefaultTemplate();
+                    localStorage.setItem('websiteSettings', JSON.stringify(websiteSettings));
+                    localStorage.setItem('surveyTemplate', JSON.stringify(surveyTemplate));
+                    
+                    loadWebsiteEditor();
+                    showNotification('Pengaturan berhasil direset ke default!', 'success');
+                }, 1800);
+            }
+        }
+
+        function exportWebsiteTemplate() {
+            showAdminProgress('Mengekspor template website...', () => {
+                try {
+                    const templateData = {
+                        websiteSettings: websiteSettings,
+                        surveyTemplate: surveyTemplate,
+                        teacherTemplate: getTeacherTemplate(),
+                        exportDate: new Date().toISOString(),
+                        version: '2.1.0'
+                    };
+                    
+                    const blob = new Blob([JSON.stringify(templateData, null, 2)], { type: 'application/json' });
+                    const link = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', 'website_template_' + new Date().toISOString().split('T')[0] + '.json');
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    showNotification('Template website berhasil diekspor!', 'success');
+                } catch (error) {
+                    showNotification('Terjadi kesalahan saat mengekspor template!', 'error');
+                }
+            }, 1600);
+        }
+
+        function importWebsiteTemplate() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const templateData = JSON.parse(e.target.result);
+                            if (confirm('Import template ini? Pengaturan saat ini akan diganti.')) {
+                                showAdminProgress('Mengimport template website...', () => {
+                                    websiteSettings = templateData.websiteSettings || websiteSettings;
+                                    surveyTemplate = templateData.surveyTemplate || surveyTemplate;
+                                    
+                                    localStorage.setItem('websiteSettings', JSON.stringify(websiteSettings));
+                                    localStorage.setItem('surveyTemplate', JSON.stringify(surveyTemplate));
+                                    
+                                    loadWebsiteEditor();
+                                    showNotification('Template berhasil diimport!', 'success');
+                                }, 2000);
+                            }
+                        } catch (error) {
+                            showNotification('File template tidak valid!', 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
         }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             showInterface('login');
+            
+            // Apply saved website settings on load
+            if (websiteSettings) {
+                applyWebsiteChanges();
+            }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96ee5326b1ecc8b5',t:'MTc1NTE1MjIwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96f08fce86554079',t:'MTc1NTE3NTY1Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
-
