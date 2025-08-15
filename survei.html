@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Survei Oli Motor - Siswa & Guru</title>
+    <title>Sistem Survei Kendaraan Motor - Siswa & Guru</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -91,7 +91,7 @@
     <div id="login-screen" class="min-h-screen flex items-center justify-center">
         <div class="bg-white rounded-lg card-shadow p-8 w-full max-w-md">
             <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">🏍️ Sistem Survei Oli Motor</h1>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">🏍️ Sistem Survei Kendaraan Bermotor</h1>
                 <p class="text-gray-600">Pilih peran Anda untuk melanjutkan</p>
             </div>
             
@@ -154,8 +154,8 @@
             <div class="container mx-auto px-4">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-2xl md:text-3xl font-bold">🏍️ Survei Oli Motor - Siswa</h1>
-                        <p class="text-lg opacity-90">Isi survei kebutuhan oli motor Anda</p>
+                        <h1 class="text-2xl md:text-3xl font-bold">🏍️ Survei Kendaraan Motor - Siswa</h1>
+                        <p class="text-lg opacity-90">Isi survei kendaraan motor Anda</p>
                     </div>
                     <button onclick="logout()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
                         🚪 Keluar
@@ -190,7 +190,7 @@
             <div class="container mx-auto px-4">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-2xl md:text-3xl font-bold">👨‍💼 Panel Administrator - Survei Oli Motor</h1>
+                        <h1 class="text-2xl md:text-3xl font-bold">👨‍💼 Panel Administrator - Survei Kendaraan Motor</h1>
                         <p class="text-lg opacity-90">Kelola sistem, pengguna, dan integrasi data</p>
                     </div>
                     <button onclick="logout()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
@@ -473,7 +473,7 @@
                                 <div class="space-y-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Judul Website</label>
-                                        <input type="text" id="website-title" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" value="Sistem Survei Oli Motor">
+                                        <input type="text" id="website-title" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" value="Sistem Survei Kendaraan Motor">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi Website</label>
@@ -2302,7 +2302,7 @@
 
         // Website Editor Functions
         let websiteSettings = JSON.parse(localStorage.getItem('websiteSettings')) || {
-            title: 'Sistem Survei Oli Motor',
+            title: 'Sistem Survei Kendaraan Motor',
             description: 'Sistem survei untuk mengumpulkan data kebutuhan oli motor siswa dan guru',
             icon: '🏍️',
             studentTitle: 'Survei Oli Motor - Siswa',
@@ -2516,7 +2516,7 @@
             if (confirm('Reset semua pengaturan ke default?')) {
                 showAdminProgress('Mereset pengaturan ke default...', () => {
                     websiteSettings = {
-                        title: 'Sistem Survei Oli Motor',
+                        title: 'Sistem Survei Kendaraan Motor',
                         description: 'Sistem survei untuk mengumpulkan data kebutuhan oli motor siswa dan guru',
                         icon: '🏍️',
                         studentTitle: 'Survei Oli Motor - Siswa',
@@ -2611,3 +2611,4 @@
     </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96f08fce86554079',t:'MTc1NTE3NTY1Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+
