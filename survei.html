@@ -91,7 +91,7 @@
     <div id="login-screen" class="min-h-screen flex items-center justify-center">
         <div class="bg-white rounded-lg card-shadow p-8 w-full max-w-md">
             <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">🏍️ Sistem Survei Kendaraan Bermotor</h1>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">🏍️ Sistem Survei Kendaraan Motor</h1>
                 <p class="text-gray-600">Pilih peran Anda untuk melanjutkan</p>
             </div>
             
@@ -155,7 +155,7 @@
                 <div class="flex justify-between items-center">
                     <div>
                         <h1 class="text-2xl md:text-3xl font-bold">🏍️ Survei Kendaraan Motor - Siswa</h1>
-                        <p class="text-lg opacity-90">Isi survei kendaraan motor Anda</p>
+                        <p class="text-lg opacity-90">Isi survei kebutuhan kendaraan motor Anda</p>
                     </div>
                     <button onclick="logout()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
                         🚪 Keluar
@@ -477,7 +477,7 @@
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi Website</label>
-                                        <textarea id="website-description" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">Sistem survei untuk mengumpulkan data kebutuhan oli motor siswa dan guru</textarea>
+                                        <textarea id="website-description" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">Sistem survei untuk mengumpulkan data kebutuhan kendaraan motor siswa dan guru</textarea>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Icon Website</label>
@@ -491,11 +491,11 @@
                                 <div class="space-y-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Judul Halaman Siswa</label>
-                                        <input type="text" id="student-title" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" value="Survei Oli Motor - Siswa">
+                                        <input type="text" id="student-title" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" value="Survei Kendaraan Motor - Siswa">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi Halaman Siswa</label>
-                                        <input type="text" id="student-description" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" value="Isi survei kebutuhan oli motor Anda">
+                                        <input type="text" id="student-description" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" value="Isi survei kebutuhan kendaraan motor Anda">
                                     </div>
                                 </div>
                             </div>
@@ -505,11 +505,11 @@
                                 <div class="space-y-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Judul Halaman Guru</label>
-                                        <input type="text" id="teacher-title" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500" value="Survei Oli Motor - Guru">
+                                        <input type="text" id="teacher-title" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500" value="Survei Kendaraan Motor - Guru">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi Halaman Guru</label>
-                                        <input type="text" id="teacher-description" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500" value="Isi survei kebutuhan oli motor khusus untuk guru">
+                                        <input type="text" id="teacher-description" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500" value="Isi survei kebutuhan kendaraan motor khusus untuk guru">
                                     </div>
                                 </div>
                             </div>
@@ -659,8 +659,8 @@
             <div class="container mx-auto px-4">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-2xl md:text-3xl font-bold">👩‍🏫 Survei Oli Motor - Guru</h1>
-                        <p class="text-lg opacity-90">Isi survei kebutuhan oli motor khusus untuk guru</p>
+                        <h1 class="text-2xl md:text-3xl font-bold">👩‍🏫 Survei Kendaraan Motor - Guru</h1>
+                        <p class="text-lg opacity-90">Isi survei kebutuhan kendaraan motor khusus untuk guru</p>
                     </div>
                     <button onclick="logout()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
                         🚪 Keluar
@@ -1186,6 +1186,14 @@
                 allSections.forEach(section => {
                     if (!section.id.includes('personal')) {
                         section.classList.add('hidden');
+                        // Clear hidden fields to avoid validation issues
+                        const hiddenInputs = section.querySelectorAll('input, select, textarea');
+                        hiddenInputs.forEach(input => {
+                            if (input.hasAttribute('required')) {
+                                input.removeAttribute('required');
+                                input.setAttribute('data-was-required', 'true');
+                            }
+                        });
                     }
                 });
                 
@@ -1198,6 +1206,14 @@
                 // Show all sections
                 allSections.forEach(section => {
                     section.classList.remove('hidden');
+                    // Restore required attributes
+                    const inputs = section.querySelectorAll('input, select, textarea');
+                    inputs.forEach(input => {
+                        if (input.hasAttribute('data-was-required')) {
+                            input.setAttribute('required', 'true');
+                            input.removeAttribute('data-was-required');
+                        }
+                    });
                 });
                 
                 // Reset submit button
@@ -1271,20 +1287,57 @@
                 }
             });
             
+            // Add metadata
             data.timestamp = new Date().toISOString();
             data.id = Date.now();
             data.tanggal = new Date().toLocaleDateString('id-ID');
             data.waktu = new Date().toLocaleTimeString('id-ID');
             data.role = 'siswa';
             
+            // Determine status based on motor ownership
+            if (data.kepemilikan_motor === 'Tidak, saya tidak memiliki kendaraan motor') {
+                data.status = 'Lengkap (Tanpa Motor)';
+                data.kategori_responden = 'Siswa Tanpa Motor';
+                // Fill empty fields for non-motor owners
+                data.merk = 'N/A (Tidak memiliki motor)';
+                data.tipe = 'N/A (Tidak memiliki motor)';
+                data.plat_nomor = 'N/A (Tidak memiliki motor)';
+                data.jarak_harian = 'N/A (Tidak memiliki motor)';
+                data.frekuensi = 'N/A (Tidak memiliki motor)';
+                data.kondisi_jalan = 'N/A (Tidak memiliki motor)';
+                data.gaya_berkendara = 'N/A (Tidak memiliki motor)';
+                data.merk_oli = 'N/A (Tidak memiliki motor)';
+                data.frekuensi_ganti = 'N/A (Tidak memiliki motor)';
+                data.faktor_penting = 'N/A (Tidak memiliki motor)';
+                data.komentar = data.komentar || 'Tidak memiliki motor untuk dikomentari';
+            } else {
+                data.status = 'Lengkap (Dengan Motor)';
+                data.kategori_responden = 'Siswa Dengan Motor';
+            }
+            
             // Show progress and then success message
             showProgressAndSuccess(data, () => {
-                // Save to spreadsheet data
+                // Save to main survey data array
                 surveyData.push(data);
                 localStorage.setItem('surveyData', JSON.stringify(surveyData));
                 
-                // Auto-save to spreadsheet format
-                saveToSpreadsheet(data);
+                // Also save to spreadsheet data for admin view
+                const spreadsheetData = JSON.parse(localStorage.getItem('spreadsheetData')) || [];
+                spreadsheetData.push(data);
+                localStorage.setItem('spreadsheetData', JSON.stringify(spreadsheetData));
+                
+                // Update spreadsheet metadata
+                const metadata = {
+                    lastUpdated: new Date().toISOString(),
+                    totalRows: spreadsheetData.length,
+                    totalColumns: Object.keys(data).length,
+                    fileSize: JSON.stringify(spreadsheetData).length
+                };
+                localStorage.setItem('spreadsheetMetadata', JSON.stringify(metadata));
+                
+                // Add activity log for admin with more specific info
+                const motorStatus = data.kepemilikan_motor === 'Tidak, saya tidak memiliki kendaraan motor' ? '(Tanpa Motor)' : '(Dengan Motor)';
+                addAdminActivityLog(`Survei siswa baru diterima dari ${data.nama || 'Siswa'} - ${data.kelas || 'Kelas tidak diisi'} ${motorStatus}`);
                 
                 this.reset();
                 
@@ -1293,6 +1346,14 @@
                 allSections.forEach((section, index) => {
                     if (index === 0) {
                         section.classList.remove('hidden');
+                        // Restore required attributes for personal section
+                        const inputs = section.querySelectorAll('input, select, textarea');
+                        inputs.forEach(input => {
+                            if (input.hasAttribute('data-was-required')) {
+                                input.setAttribute('required', 'true');
+                                input.removeAttribute('data-was-required');
+                            }
+                        });
                     } else {
                         section.classList.add('hidden');
                     }
@@ -1331,24 +1392,99 @@
                 }
             });
             
+            // Add metadata
             data.timestamp = new Date().toISOString();
             data.id = Date.now();
             data.tanggal = new Date().toLocaleDateString('id-ID');
             data.waktu = new Date().toLocaleTimeString('id-ID');
-            data.role = 'guru'; // Mark as teacher response
+            data.role = 'guru';
+            data.status = 'Lengkap';
             
             // Show progress and then success message
             showProgressAndSuccess(data, () => {
-                // Save to spreadsheet data
+                // Save to main survey data array
                 surveyData.push(data);
                 localStorage.setItem('surveyData', JSON.stringify(surveyData));
                 
-                // Auto-save to spreadsheet format
-                saveToSpreadsheet(data);
+                // Also save to spreadsheet data for admin view
+                const spreadsheetData = JSON.parse(localStorage.getItem('spreadsheetData')) || [];
+                spreadsheetData.push(data);
+                localStorage.setItem('spreadsheetData', JSON.stringify(spreadsheetData));
+                
+                // Update spreadsheet metadata
+                const metadata = {
+                    lastUpdated: new Date().toISOString(),
+                    totalRows: spreadsheetData.length,
+                    totalColumns: Object.keys(data).length,
+                    fileSize: JSON.stringify(spreadsheetData).length
+                };
+                localStorage.setItem('spreadsheetMetadata', JSON.stringify(metadata));
+                
+                // Add activity log for admin
+                addAdminActivityLog(`Survei guru baru diterima dari ${data.nama || 'Guru'} - ${data.mata_pelajaran || 'Mata pelajaran tidak diisi'}`);
                 
                 this.reset();
             });
         });
+
+        // Admin Activity Log Functions
+        function addAdminActivityLog(message) {
+            const activityLog = JSON.parse(localStorage.getItem('adminActivityLog')) || [];
+            const logEntry = {
+                id: Date.now(),
+                message: message,
+                timestamp: new Date().toISOString(),
+                time: new Date().toLocaleString('id-ID')
+            };
+            
+            activityLog.unshift(logEntry); // Add to beginning
+            
+            // Keep only last 50 entries
+            if (activityLog.length > 50) {
+                activityLog.splice(50);
+            }
+            
+            localStorage.setItem('adminActivityLog', JSON.stringify(activityLog));
+            
+            // Update activity log display if admin is logged in
+            updateActivityLogDisplay();
+        }
+
+        function updateActivityLogDisplay() {
+            const activityContainer = document.getElementById('admin-activity-log');
+            if (!activityContainer) return;
+            
+            const activityLog = JSON.parse(localStorage.getItem('adminActivityLog')) || [];
+            
+            let html = `
+                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded">
+                    <span class="text-green-600">✅</span>
+                    <span class="text-sm text-gray-600">Sistem dimulai - Administrator login</span>
+                    <span class="text-xs text-gray-400 ml-auto" id="admin-login-time">${new Date().toLocaleTimeString('id-ID')}</span>
+                </div>
+            `;
+            
+            activityLog.forEach(entry => {
+                const icon = entry.message.includes('siswa') ? '👨‍🎓' : 
+                           entry.message.includes('guru') ? '👩‍🏫' : 
+                           entry.message.includes('backup') ? '💾' : 
+                           entry.message.includes('hapus') ? '🗑️' : '📊';
+                           
+                const color = entry.message.includes('diterima') ? 'text-green-600' : 
+                            entry.message.includes('hapus') ? 'text-red-600' : 
+                            'text-blue-600';
+                            
+                html += `
+                    <div class="flex items-center space-x-3 p-3 bg-white rounded border">
+                        <span class="${color}">${icon}</span>
+                        <span class="text-sm text-gray-700 flex-1">${entry.message}</span>
+                        <span class="text-xs text-gray-400">${entry.time}</span>
+                    </div>
+                `;
+            });
+            
+            activityContainer.innerHTML = html;
+        }
 
         // Spreadsheet functions
         function saveToSpreadsheet(data) {
@@ -1429,25 +1565,42 @@
 
         function refreshSpreadsheet() {
             showAdminProgress('Memuat ulang data spreadsheet...', () => {
-                const spreadsheetData = JSON.parse(localStorage.getItem('spreadsheetData')) || surveyData;
+                // Get data from both sources and merge
+                const surveyDataFromStorage = JSON.parse(localStorage.getItem('surveyData')) || [];
+                const spreadsheetDataFromStorage = JSON.parse(localStorage.getItem('spreadsheetData')) || [];
+                
+                // Merge and deduplicate data based on ID
+                const allData = [...surveyDataFromStorage, ...spreadsheetDataFromStorage];
+                const uniqueData = allData.filter((item, index, self) => 
+                    index === self.findIndex(t => t.id === item.id)
+                );
+                
+                // Update global variables
+                surveyData = uniqueData;
+                localStorage.setItem('surveyData', JSON.stringify(surveyData));
+                localStorage.setItem('spreadsheetData', JSON.stringify(surveyData));
+                
                 const metadata = JSON.parse(localStorage.getItem('spreadsheetMetadata')) || {};
                 
                 // Update metadata display
-                document.getElementById('spreadsheet-total-rows').textContent = spreadsheetData.length;
-                document.getElementById('spreadsheet-total-columns').textContent = spreadsheetData.length > 0 ? Object.keys(spreadsheetData[0]).length : 0;
+                document.getElementById('spreadsheet-total-rows').textContent = surveyData.length;
+                document.getElementById('spreadsheet-total-columns').textContent = surveyData.length > 0 ? Object.keys(surveyData[0]).length : 0;
                 document.getElementById('spreadsheet-last-updated').textContent = metadata.lastUpdated ? new Date(metadata.lastUpdated).toLocaleString('id-ID') : '-';
                 document.getElementById('spreadsheet-file-size').textContent = metadata.fileSize ? Math.round(metadata.fileSize / 1024) + ' KB' : '0 KB';
                 
                 // Reset filtered data
-                filteredSpreadsheetData = spreadsheetData;
+                filteredSpreadsheetData = surveyData;
                 document.getElementById('spreadsheet-search').value = '';
                 document.getElementById('search-results-info').textContent = '';
                 
                 // Generate and display spreadsheet
                 const container = document.getElementById('spreadsheet-container');
-                container.innerHTML = generateSpreadsheetHTML(spreadsheetData);
+                container.innerHTML = generateSpreadsheetHTML(surveyData);
                 
-                showNotification('Data spreadsheet berhasil diperbarui!', 'success');
+                // Add activity log
+                addAdminActivityLog(`Data spreadsheet direfresh - Total ${surveyData.length} data`);
+                
+                showNotification(`Data spreadsheet berhasil diperbarui! (${surveyData.length} data)`, 'success');
             });
         }
 
@@ -1501,7 +1654,8 @@
 
             showAdminProgress(`Mengekspor ${dataToExport.length} baris data ke CSV...`, () => {
                 const csvContent = convertToCSV(dataToExport);
-                downloadCSV(csvContent, 'spreadsheet_survei_oli_motor');
+                downloadCSV(csvContent, 'spreadsheet_survei_kendaraan_motor');
+                addAdminActivityLog(`Data spreadsheet diekspor ke CSV - ${dataToExport.length} baris data`);
                 showNotification(`Data berhasil diekspor! (${dataToExport.length} baris)`, 'success');
             }, 1800);
         }
@@ -1513,7 +1667,7 @@
             }
 
             const csvContent = convertToCSV(surveyData);
-            downloadCSV(csvContent, 'teacher_spreadsheet_survei_oli_motor');
+            downloadCSV(csvContent, 'teacher_spreadsheet_survei_kendaraan_motor');
             showNotification(`Data guru berhasil diekspor! (${surveyData.length} baris)`, 'success');
         }
 
@@ -1527,6 +1681,7 @@
                     localStorage.setItem('surveyData', JSON.stringify(surveyData));
                     refreshSpreadsheet();
                     loadAdminDashboard(); // Refresh dashboard stats
+                    addAdminActivityLog(`Semua data spreadsheet dihapus - ${dataCount} data dihapus`);
                     showNotification(`Semua data spreadsheet berhasil dihapus! (${dataCount} data)`, 'success');
                 }, 2500);
             }
@@ -1567,12 +1722,33 @@
         // Admin functions
         function loadAdminDashboard() {
             showAdminProgress('Memuat dashboard administrator...', () => {
+                // Load all survey data from storage
+                const allSurveyData = JSON.parse(localStorage.getItem('surveyData')) || [];
+                const spreadsheetData = JSON.parse(localStorage.getItem('spreadsheetData')) || [];
+                
+                // Merge and deduplicate data
+                const mergedData = [...allSurveyData, ...spreadsheetData];
+                const uniqueData = mergedData.filter((item, index, self) => 
+                    index === self.findIndex(t => t.id === item.id)
+                );
+                
+                // Update global surveyData
+                surveyData = uniqueData;
+                
                 const totalSurveys = surveyData.length;
                 const studentSurveys = surveyData.filter(item => item.role === 'siswa').length;
                 const teacherSurveys = surveyData.filter(item => item.role === 'guru').length;
                 
+                // Count students with and without motor
+                const studentsWithMotor = surveyData.filter(item => 
+                    item.role === 'siswa' && item.kepemilikan_motor === 'Ya, saya memiliki kendaraan motor'
+                ).length;
+                const studentsWithoutMotor = surveyData.filter(item => 
+                    item.role === 'siswa' && item.kepemilikan_motor === 'Tidak, saya tidak memiliki kendaraan motor'
+                ).length;
+                
                 document.getElementById('admin-total-surveys').textContent = totalSurveys;
-                document.getElementById('admin-total-students').textContent = studentSurveys;
+                document.getElementById('admin-total-students').textContent = `${studentSurveys} (${studentsWithMotor} motor, ${studentsWithoutMotor} tanpa)`;
                 document.getElementById('admin-total-teachers').textContent = teacherSurveys;
                 
                 const today = new Date().toDateString();
@@ -1592,8 +1768,14 @@
                 loadDailyDistanceChart();
                 loadOilFactorsChart();
                 
+                // Update activity log display
+                updateActivityLogDisplay();
+                
                 updateSystemInfo();
                 setInterval(updateUptime, 60000);
+                
+                // Add login activity
+                addAdminActivityLog('Administrator login ke sistem dashboard');
             }, 1200);
         }
 
@@ -1642,11 +1824,13 @@
 
         function loadOwnershipChart() {
             const ownershipData = { 'Memiliki Motor': 0, 'Tidak Memiliki Motor': 0 };
-            surveyData.forEach(item => {
+            
+            // Only count students (not teachers) for ownership chart
+            surveyData.filter(item => item.role === 'siswa').forEach(item => {
                 if (item.kepemilikan_motor) {
                     if (item.kepemilikan_motor.includes('Ya')) {
                         ownershipData['Memiliki Motor']++;
-                    } else {
+                    } else if (item.kepemilikan_motor.includes('Tidak')) {
                         ownershipData['Tidak Memiliki Motor']++;
                     }
                 }
@@ -1660,7 +1844,7 @@
                     <div class="flex items-center justify-center h-full text-gray-500">
                         <div class="text-center">
                             <div class="text-4xl mb-2">🥧</div>
-                            <p>Grafik akan muncul setelah ada data survei</p>
+                            <p>Grafik akan muncul setelah ada data survei siswa</p>
                         </div>
                     </div>
                 `;
@@ -1680,6 +1864,12 @@
                                 <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                                       fill="none" stroke="#3b82f6" stroke-width="3"
                                       stroke-dasharray="${motorPercentage}, 100"/>
+                                ${noMotorPercentage > 0 ? `
+                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      fill="none" stroke="#ef4444" stroke-width="3"
+                                      stroke-dasharray="${noMotorPercentage}, 100"
+                                      stroke-dashoffset="${-motorPercentage}"/>
+                                ` : ''}
                             </svg>
                             <div class="absolute inset-0 flex items-center justify-center">
                                 <span class="text-lg font-bold text-gray-700">${total}</span>
@@ -1690,17 +1880,20 @@
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-2">
                                 <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
-                                <span class="text-sm">Memiliki Motor</span>
+                                <span class="text-sm">Siswa Memiliki Motor</span>
                             </div>
                             <span class="text-sm font-bold">${ownershipData['Memiliki Motor']} (${motorPercentage.toFixed(1)}%)</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-2">
-                                <div class="w-3 h-3 bg-gray-300 rounded-full"></div>
-                                <span class="text-sm">Tidak Memiliki Motor</span>
+                                <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                                <span class="text-sm">Siswa Tanpa Motor</span>
                             </div>
                             <span class="text-sm font-bold">${ownershipData['Tidak Memiliki Motor']} (${noMotorPercentage.toFixed(1)}%)</span>
                         </div>
+                    </div>
+                    <div class="text-xs text-gray-500 text-center">
+                        Total Siswa: ${total} responden
                     </div>
                 </div>
             `;
@@ -2303,12 +2496,12 @@
         // Website Editor Functions
         let websiteSettings = JSON.parse(localStorage.getItem('websiteSettings')) || {
             title: 'Sistem Survei Kendaraan Motor',
-            description: 'Sistem survei untuk mengumpulkan data kebutuhan oli motor siswa dan guru',
+            description: 'Sistem survei untuk mengumpulkan data kebutuhan kendaraan motor siswa dan guru',
             icon: '🏍️',
-            studentTitle: 'Survei Oli Motor - Siswa',
-            studentDescription: 'Isi survei kebutuhan oli motor Anda',
-            teacherTitle: 'Survei Oli Motor - Guru',
-            teacherDescription: 'Isi survei kebutuhan oli motor khusus untuk guru',
+            studentTitle: 'Survei Kendaraan Motor - Siswa',
+            studentDescription: 'Isi survei kebutuhan kendaraan motor Anda',
+            teacherTitle: 'Survei Kendaraan Motor - Guru',
+            teacherDescription: 'Isi survei kebutuhan kendaraan motor khusus untuk guru',
             formTitle: 'Form Survei',
             formDescription: 'Silakan isi form survei berikut dengan lengkap',
             successMessage: 'Terima kasih atas partisipasi Anda dalam survei ini! Kami sangat menghargai waktu dan tanggapan Anda. Data yang Anda berikan akan sangat membantu kami dalam memahami kebutuhan transportasi sekolah dan perawatan kendaraan, sehingga kami dapat meningkatkan layanan untuk siswa dan guru.'
@@ -2517,12 +2710,12 @@
                 showAdminProgress('Mereset pengaturan ke default...', () => {
                     websiteSettings = {
                         title: 'Sistem Survei Kendaraan Motor',
-                        description: 'Sistem survei untuk mengumpulkan data kebutuhan oli motor siswa dan guru',
+                        description: 'Sistem survei untuk mengumpulkan data kebutuhan kendaraan motor siswa dan guru',
                         icon: '🏍️',
-                        studentTitle: 'Survei Oli Motor - Siswa',
-                        studentDescription: 'Isi survei kebutuhan oli motor Anda',
-                        teacherTitle: 'Survei Oli Motor - Guru',
-                        teacherDescription: 'Isi survei kebutuhan oli motor khusus untuk guru',
+                        studentTitle: 'Survei Kendaraan Motor - Siswa',
+                        studentDescription: 'Isi survei kebutuhan kendaraan motor Anda',
+                        teacherTitle: 'Survei Kendaraan Motor - Guru',
+                        teacherDescription: 'Isi survei kebutuhan kendaraan motor khusus untuk guru',
                         formTitle: 'Form Survei',
                         formDescription: 'Silakan isi form survei berikut dengan lengkap',
                         successMessage: 'Terima kasih atas partisipasi Anda dalam survei ini! Kami sangat menghargai waktu dan tanggapan Anda. Data yang Anda berikan akan sangat membantu kami dalam memahami kebutuhan transportasi sekolah dan perawatan kendaraan, sehingga kami dapat meningkatkan layanan untuk siswa dan guru.'
@@ -2609,6 +2802,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96f08fce86554079',t:'MTc1NTE3NTY1Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96f5193cf2fa468b',t:'MTc1NTIyMzIyOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
-
