@@ -95,6 +95,8 @@
                 <p class="text-gray-600">Pilih peran Anda untuk melanjutkan</p>
             </div>
             
+
+            
             <div class="space-y-4">
                 <button onclick="loginAs('student')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
                     <span>👨‍🎓</span>
@@ -713,7 +715,8 @@
         const CENTRAL_DB_VERSION = 2;
         let centralDB = null;
         
-        // CLOUD STORAGE SIMULATION - Menggunakan multiple storage keys untuk simulasi cloud
+        // CLOUD STORAGE SIMULATION - Menggunakan URL-based storage untuk cross-device access
+        const CLOUD_STORAGE_URL = 'https://api.jsonbin.io/v3/b/'; // Simulasi cloud endpoint
         const CLOUD_STORAGE_KEYS = [
             'GLOBAL_SURVEY_CLOUD_DATA',
             'SHARED_MULTI_DEVICE_SURVEYS', 
@@ -721,6 +724,13 @@
             'CROSS_DEVICE_DATA_POOL',
             'UNIVERSAL_SURVEY_STORAGE'
         ];
+        
+        // SHARED STORAGE SIMULATION menggunakan URL parameters dan hash
+        function getSharedStorageKey() {
+            // Menggunakan kombinasi domain dan path untuk membuat key yang sama di semua perangkat
+            const baseKey = window.location.hostname + window.location.pathname;
+            return 'SHARED_SURVEY_DATA_' + btoa(baseKey).replace(/[^a-zA-Z0-9]/g, '');
+        }
         
         // Enhanced Device fingerprinting dengan lebih banyak parameter
         function getDeviceFingerprint() {
@@ -850,6 +860,10 @@
         function initCloudStorageSimulation() {
             console.log('🌐 Menginisialisasi simulasi cloud storage...');
             
+            // Initialize shared storage key
+            const sharedKey = getSharedStorageKey();
+            console.log('🔑 Shared storage key:', sharedKey);
+            
             // Initialize all cloud storage keys
             CLOUD_STORAGE_KEYS.forEach(key => {
                 if (!localStorage.getItem(key)) {
@@ -857,12 +871,78 @@
                 }
             });
             
+            // Initialize shared key
+            if (!localStorage.getItem(sharedKey)) {
+                localStorage.setItem(sharedKey, JSON.stringify([]));
+            }
+            
             // Initialize device registry
             if (!localStorage.getItem('DEVICE_REGISTRY')) {
                 localStorage.setItem('DEVICE_REGISTRY', JSON.stringify({}));
             }
             
+            // Try to sync with external storage simulation
+            syncWithExternalStorage();
+            
             console.log('✅ Cloud storage simulation berhasil diinisialisasi');
+        }
+        
+        // SIMULASI EXTERNAL STORAGE SYNC
+        function syncWithExternalStorage() {
+            try {
+                // Simulasi sync dengan external storage menggunakan URL hash
+                const urlHash = window.location.hash;
+                if (urlHash && urlHash.includes('surveydata=')) {
+                    const encodedData = urlHash.split('surveydata=')[1];
+                    if (encodedData) {
+                        try {
+                            const decodedData = JSON.parse(atob(encodedData));
+                            if (Array.isArray(decodedData)) {
+                                console.log('📥 Syncing data from URL hash:', decodedData.length, 'records');
+                                const sharedKey = getSharedStorageKey();
+                                const existingData = JSON.parse(localStorage.getItem(sharedKey) || '[]');
+                                const mergedData = [...existingData, ...decodedData];
+                                const uniqueData = removeDuplicatesAdvanced(mergedData);
+                                localStorage.setItem(sharedKey, JSON.stringify(uniqueData));
+                            }
+                        } catch (e) {
+                            console.warn('⚠️ Failed to decode URL hash data:', e);
+                        }
+                    }
+                }
+                
+                // Simulasi periodic sync dengan server
+                setInterval(() => {
+                    simulateServerSync();
+                }, 30000); // Sync setiap 30 detik
+                
+            } catch (e) {
+                console.warn('⚠️ External storage sync failed:', e);
+            }
+        }
+        
+        // SIMULASI SERVER SYNC
+        function simulateServerSync() {
+            try {
+                const sharedKey = getSharedStorageKey();
+                const localData = JSON.parse(localStorage.getItem(sharedKey) || '[]');
+                
+                // Simulasi upload ke server (dalam implementasi nyata, ini akan menjadi API call)
+                if (localData.length > 0) {
+                    console.log('🔄 Simulating server sync...', localData.length, 'records');
+                    
+                    // Update URL hash dengan data terbaru untuk sharing
+                    const encodedData = btoa(JSON.stringify(localData));
+                    const newHash = '#surveydata=' + encodedData;
+                    
+                    // Update URL tanpa reload page
+                    if (window.location.hash !== newHash) {
+                        history.replaceState(null, null, newHash);
+                    }
+                }
+            } catch (e) {
+                console.warn('⚠️ Server sync simulation failed:', e);
+            }
         }
         
         // SISTEM PENYIMPANAN TERPUSAT MULTI-PERANGKAT
@@ -932,6 +1012,23 @@
             surveyData.push(data);
             localStorage.setItem('surveyData', JSON.stringify(surveyData));
             
+            // Save to shared storage key (PENTING untuk cross-device)
+            const sharedKey = getSharedStorageKey();
+            try {
+                const sharedData = JSON.parse(localStorage.getItem(sharedKey)) || [];
+                const exists = sharedData.find(item => item.id === data.id);
+                if (!exists) {
+                    sharedData.push(data);
+                    localStorage.setItem(sharedKey, JSON.stringify(sharedData));
+                    console.log(`✅ Data disimpan ke shared key: ${sharedKey}`);
+                    
+                    // Trigger immediate sync
+                    simulateServerSync();
+                }
+            } catch (e) {
+                console.warn(`⚠️ Gagal menyimpan ke shared key:`, e);
+            }
+            
             // Save to ALL cloud storage simulation keys
             CLOUD_STORAGE_KEYS.forEach(key => {
                 try {
@@ -978,13 +1075,70 @@
                 }
             });
             
+            // Save to global cross-device keys
+            const globalKeys = [
+                'GLOBAL_CROSS_DEVICE_SURVEY_DATA',
+                'UNIVERSAL_SURVEY_COLLECTION',
+                'SHARED_SURVEY_DATABASE'
+            ];
+            
+            globalKeys.forEach(key => {
+                try {
+                    const globalData = JSON.parse(localStorage.getItem(key)) || [];
+                    const exists = globalData.find(item => item.id === data.id);
+                    if (!exists) {
+                        globalData.push(data);
+                        localStorage.setItem(key, JSON.stringify(globalData));
+                        console.log(`✅ Data disimpan ke global key: ${key}`);
+                    }
+                } catch (e) {
+                    console.warn(`⚠️ Gagal menyimpan ke global key ${key}:`, e);
+                }
+            });
+            
             // Update spreadsheet data with enhanced metadata
             updateSpreadsheetData(data);
             
             // Create activity log
             createActivityLog(data);
             
+            // Broadcast to other tabs/windows
+            broadcastDataToAllTabs(data);
+            
             console.log('✅ Data berhasil disimpan ke semua storage sources');
+        }
+        
+        // BROADCAST DATA TO ALL TABS
+        function broadcastDataToAllTabs(data) {
+            try {
+                // Use multiple methods to ensure cross-tab communication
+                const broadcastData = {
+                    type: 'NEW_SURVEY_DATA',
+                    data: data,
+                    timestamp: Date.now(),
+                    sharedKey: getSharedStorageKey()
+                };
+                
+                // Method 1: localStorage event
+                localStorage.setItem('SURVEY_BROADCAST_' + Date.now(), JSON.stringify(broadcastData));
+                setTimeout(() => {
+                    localStorage.removeItem('SURVEY_BROADCAST_' + Date.now());
+                }, 1000);
+                
+                // Method 2: BroadcastChannel if available
+                if (typeof BroadcastChannel !== 'undefined') {
+                    const bc = new BroadcastChannel('survey_data_channel');
+                    bc.postMessage(broadcastData);
+                    bc.close();
+                }
+                
+                // Method 3: Custom event
+                window.dispatchEvent(new CustomEvent('surveyDataUpdate', { detail: broadcastData }));
+                
+                console.log('📡 Data broadcasted to all tabs');
+            } catch (e) {
+                console.warn('⚠️ Failed to broadcast data:', e);
+            }
         }
         
         // UPDATE DEVICE REGISTRY
@@ -1131,6 +1285,57 @@
             const allSources = [];
             let sourceCount = 0;
             
+            // PRIORITAS 1: Load from shared storage key (PENTING untuk cross-device)
+            const sharedKey = getSharedStorageKey();
+            try {
+                const sharedData = JSON.parse(localStorage.getItem(sharedKey)) || [];
+                if (Array.isArray(sharedData) && sharedData.length > 0) {
+                    allSources.push(...sharedData);
+                    sourceCount++;
+                    console.log(`🔑 Loaded ${sharedData.length} records from shared key: ${sharedKey}`);
+                }
+            } catch (e) {
+                console.warn(`⚠️ Error loading from shared key:`, e);
+            }
+            
+            // PRIORITAS 2: Load from URL hash (untuk cross-device sharing)
+            try {
+                const urlHash = window.location.hash;
+                if (urlHash && urlHash.includes('surveydata=')) {
+                    const encodedData = urlHash.split('surveydata=')[1];
+                    if (encodedData) {
+                        const decodedData = JSON.parse(atob(encodedData));
+                        if (Array.isArray(decodedData) && decodedData.length > 0) {
+                            allSources.push(...decodedData);
+                            sourceCount++;
+                            console.log(`🔗 Loaded ${decodedData.length} records from URL hash`);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn(`⚠️ Error loading from URL hash:`, e);
+            }
+            
+            // PRIORITAS 3: Load from global cross-device keys
+            const globalKeys = [
+                'GLOBAL_CROSS_DEVICE_SURVEY_DATA',
+                'UNIVERSAL_SURVEY_COLLECTION',
+                'SHARED_SURVEY_DATABASE'
+            ];
+            
+            globalKeys.forEach(key => {
+                try {
+                    const data = JSON.parse(localStorage.getItem(key)) || [];
+                    if (Array.isArray(data) && data.length > 0) {
+                        allSources.push(...data);
+                        sourceCount++;
+                        console.log(`🌐 Loaded ${data.length} records from global ${key}`);
+                    }
+                } catch (e) {
+                    console.warn(`⚠️ Error loading from global ${key}:`, e);
+                }
+            });
+            
             // Load from cloud storage simulation keys
             CLOUD_STORAGE_KEYS.forEach(key => {
                 try {
@@ -1192,7 +1397,7 @@
             const deviceKeys = [];
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
-                if (key && (key.startsWith('DEVICE_SURVEY_') || key.includes('device_'))) {
+                if (key && (key.startsWith('DEVICE_SURVEY_') || key.includes('device_') || key.startsWith('GLOBAL_') || key.startsWith('SHARED_') || key.startsWith('UNIVERSAL_'))) {
                     deviceKeys.push(key);
                 }
             }
@@ -3389,7 +3594,7 @@
             
             broadcastChannels.forEach(channel => {
                 window.addEventListener('storage', function(e) {
-                    if (e.key === channel && e.newValue) {
+                    if (e.key && e.key.startsWith('SURVEY_BROADCAST_') && e.newValue) {
                         try {
                             const broadcastData = JSON.parse(e.newValue);
                             handleBroadcastMessage(broadcastData, channel);
@@ -3400,10 +3605,15 @@
                 });
             });
             
+            // Listen for custom events
+            window.addEventListener('surveyDataUpdate', function(event) {
+                handleBroadcastMessage(event.detail, 'CustomEvent');
+            });
+            
             // BroadcastChannel API support
             if (typeof BroadcastChannel !== 'undefined') {
                 try {
-                    const bc = new BroadcastChannel('survey_updates');
+                    const bc = new BroadcastChannel('survey_data_channel');
                     bc.onmessage = function(event) {
                         handleBroadcastMessage(event.data, 'BroadcastChannel');
                     };
@@ -3418,17 +3628,54 @@
                 // More frequent sync for admin
                 const syncInterval = setInterval(() => {
                     syncAdminData();
-                }, 15000); // Check every 15 seconds
+                }, 10000); // Check every 10 seconds
                 
                 // Store interval ID for cleanup
                 window.adminSyncInterval = syncInterval;
-                console.log('⏰ Admin periodic sync started (15s interval)');
+                console.log('⏰ Admin periodic sync started (10s interval)');
             }
+            
+            // Universal periodic sync for all users
+            const universalSyncInterval = setInterval(() => {
+                syncUniversalData();
+            }, 20000); // Check every 20 seconds
             
             // Device heartbeat system
             startDeviceHeartbeat();
             
+            // Monitor URL hash changes for cross-device data sharing
+            window.addEventListener('hashchange', function() {
+                syncWithExternalStorage();
+            });
+            
             console.log('✅ Cross-device communication system initialized');
+        }
+        
+        // UNIVERSAL DATA SYNC untuk semua user
+        function syncUniversalData() {
+            try {
+                const sharedKey = getSharedStorageKey();
+                const sharedData = JSON.parse(localStorage.getItem(sharedKey) || '[]');
+                
+                if (sharedData.length > 0) {
+                    // Update main survey data if needed
+                    const currentData = JSON.parse(localStorage.getItem('surveyData') || '[]');
+                    if (sharedData.length !== currentData.length) {
+                        const mergedData = [...currentData, ...sharedData];
+                        const uniqueData = removeDuplicatesAdvanced(mergedData);
+                        localStorage.setItem('surveyData', JSON.stringify(uniqueData));
+                        surveyData = uniqueData;
+                        console.log(`🔄 Universal sync: Updated to ${uniqueData.length} records`);
+                        
+                        // Update admin dashboard if admin is logged in
+                        if (currentUser && currentUser.role === 'admin') {
+                            updateDashboardStats();
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('⚠️ Universal sync failed:', e);
+            }
         }
         
         // HANDLE BROADCAST MESSAGES
@@ -3622,5 +3869,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96f551885564fdfe',t:'MTc1NTIyNTUzNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96f5e2aef1e4c9c6',t:'MTc1NTIzMTQ4MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
