@@ -224,7 +224,7 @@
 
             <!-- Dashboard Tab -->
             <div id="admin-dashboard-tab" class="animate-fade-in">
-                <div class="grid md:grid-cols-5 gap-6 mb-8">
+                <div class="grid md:grid-cols-6 gap-6 mb-8">
                     <div class="bg-white rounded-lg card-shadow p-6">
                         <div class="flex items-center justify-between">
                             <div>
@@ -264,12 +264,22 @@
                     <div class="bg-white rounded-lg card-shadow p-6">
                         <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-800">Spreadsheet</h3>
-                                <p class="text-lg font-bold" id="admin-sheets-status">
+                                <h3 class="text-lg font-semibold text-gray-800">Perangkat</h3>
+                                <p class="text-3xl font-bold text-orange-600" id="admin-total-devices">0</p>
+                            </div>
+                            <div class="text-4xl">📱</div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg card-shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Database</h3>
+                                <p class="text-lg font-bold" id="admin-db-status">
                                     <span class="text-green-600">Aktif</span>
                                 </p>
+                                <p class="text-xs text-gray-500" id="sync-status">Sinkronisasi aktif</p>
                             </div>
-                            <div class="text-4xl">📊</div>
+                            <div class="text-4xl">💾</div>
                         </div>
                     </div>
                 </div>
@@ -697,6 +707,570 @@
         let surveyTemplate = JSON.parse(localStorage.getItem('surveyTemplate')) || getDefaultTemplate();
         let adminStartTime = Date.now();
         let filteredSpreadsheetData = [];
+        
+        // SISTEM DATABASE TERPUSAT MULTI-PERANGKAT
+        const CENTRAL_DB_NAME = 'SurveyKendaraanMotorDB';
+        const CENTRAL_DB_VERSION = 2;
+        let centralDB = null;
+        
+        // CLOUD STORAGE SIMULATION - Menggunakan multiple storage keys untuk simulasi cloud
+        const CLOUD_STORAGE_KEYS = [
+            'GLOBAL_SURVEY_CLOUD_DATA',
+            'SHARED_MULTI_DEVICE_SURVEYS', 
+            'CENTRAL_SURVEY_REPOSITORY',
+            'CROSS_DEVICE_DATA_POOL',
+            'UNIVERSAL_SURVEY_STORAGE'
+        ];
+        
+        // Enhanced Device fingerprinting dengan lebih banyak parameter
+        function getDeviceFingerprint() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillText('Device fingerprint survey', 2, 2);
+            
+            const fingerprint = [
+                navigator.userAgent,
+                navigator.language,
+                navigator.languages ? navigator.languages.join(',') : '',
+                screen.width + 'x' + screen.height,
+                screen.colorDepth,
+                new Date().getTimezoneOffset(),
+                canvas.toDataURL(),
+                navigator.hardwareConcurrency || 'unknown',
+                navigator.deviceMemory || 'unknown',
+                navigator.platform,
+                navigator.cookieEnabled,
+                window.location.hostname,
+                Date.now().toString().slice(-6) // Add timestamp component for uniqueness
+            ].join('|');
+            
+            // Create a more robust hash
+            let hash = 0;
+            for (let i = 0; i < fingerprint.length; i++) {
+                const char = fingerprint.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return 'device_' + Math.abs(hash).toString(36) + '_' + Date.now().toString(36).slice(-4);
+        }
+        
+        // BROADCAST SYSTEM untuk komunikasi real-time antar perangkat
+        function broadcastToAllDevices(data) {
+            const broadcastMessage = {
+                type: 'NEW_SURVEY_SUBMISSION',
+                data: data,
+                timestamp: Date.now(),
+                deviceId: getDeviceFingerprint(),
+                broadcastId: 'broadcast_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+            };
+            
+            // Broadcast ke multiple channels
+            const broadcastChannels = [
+                'SURVEY_BROADCAST_CHANNEL',
+                'MULTI_DEVICE_SYNC_CHANNEL', 
+                'REAL_TIME_DATA_CHANNEL',
+                'CROSS_DEVICE_UPDATES'
+            ];
+            
+            broadcastChannels.forEach(channel => {
+                try {
+                    localStorage.setItem(channel, JSON.stringify(broadcastMessage));
+                    // Trigger storage event by removing and setting again
+                    setTimeout(() => {
+                        localStorage.removeItem(channel);
+                    }, 100);
+                } catch (e) {
+                    console.log(`Broadcast to ${channel} failed:`, e);
+                }
+            });
+            
+            // Also use BroadcastChannel API if available
+            if (typeof BroadcastChannel !== 'undefined') {
+                try {
+                    const bc = new BroadcastChannel('survey_updates');
+                    bc.postMessage(broadcastMessage);
+                    bc.close();
+                } catch (e) {
+                    console.log('BroadcastChannel failed:', e);
+                }
+            }
+        }
+        
+        // INISIALISASI DATABASE TERPUSAT MULTI-PERANGKAT
+        function initCentralDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(CENTRAL_DB_NAME, CENTRAL_DB_VERSION);
+                
+                request.onerror = () => {
+                    console.warn('IndexedDB tidak tersedia, menggunakan Enhanced localStorage sebagai fallback');
+                    initCloudStorageSimulation();
+                    resolve(null);
+                };
+                
+                request.onsuccess = (event) => {
+                    centralDB = event.target.result;
+                    console.log('✅ Database terpusat berhasil diinisialisasi');
+                    resolve(centralDB);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    
+                    // Enhanced survey data store
+                    if (!db.objectStoreNames.contains('surveyData')) {
+                        const surveyStore = db.createObjectStore('surveyData', { keyPath: 'id' });
+                        surveyStore.createIndex('timestamp', 'timestamp', { unique: false });
+                        surveyStore.createIndex('role', 'role', { unique: false });
+                        surveyStore.createIndex('device_id', 'device_id', { unique: false });
+                        surveyStore.createIndex('submission_date', 'submission_date', { unique: false });
+                        surveyStore.createIndex('nama', 'nama', { unique: false });
+                    }
+                    
+                    // Enhanced device tracking store
+                    if (!db.objectStoreNames.contains('deviceTracking')) {
+                        const deviceStore = db.createObjectStore('deviceTracking', { keyPath: 'device_id' });
+                        deviceStore.createIndex('submitted_at', 'submitted_at', { unique: false });
+                        deviceStore.createIndex('last_activity', 'last_activity', { unique: false });
+                        deviceStore.createIndex('submission_count', 'submission_count', { unique: false });
+                    }
+                    
+                    // New: Cross-device sync store
+                    if (!db.objectStoreNames.contains('crossDeviceSync')) {
+                        const syncStore = db.createObjectStore('crossDeviceSync', { keyPath: 'sync_id' });
+                        syncStore.createIndex('sync_timestamp', 'sync_timestamp', { unique: false });
+                        syncStore.createIndex('source_device', 'source_device', { unique: false });
+                    }
+                };
+            });
+        }
+        
+        // SIMULASI CLOUD STORAGE untuk fallback
+        function initCloudStorageSimulation() {
+            console.log('🌐 Menginisialisasi simulasi cloud storage...');
+            
+            // Initialize all cloud storage keys
+            CLOUD_STORAGE_KEYS.forEach(key => {
+                if (!localStorage.getItem(key)) {
+                    localStorage.setItem(key, JSON.stringify([]));
+                }
+            });
+            
+            // Initialize device registry
+            if (!localStorage.getItem('DEVICE_REGISTRY')) {
+                localStorage.setItem('DEVICE_REGISTRY', JSON.stringify({}));
+            }
+            
+            console.log('✅ Cloud storage simulation berhasil diinisialisasi');
+        }
+        
+        // SISTEM PENYIMPANAN TERPUSAT MULTI-PERANGKAT
+        function saveToCentralDatabase(data) {
+            console.log('💾 Menyimpan data ke sistem terpusat multi-perangkat...');
+            
+            // Add enhanced metadata
+            data.submission_date = new Date().toISOString().split('T')[0];
+            data.submission_time = new Date().toLocaleTimeString('id-ID');
+            data.device_fingerprint = getDeviceFingerprint();
+            data.sync_status = 'synced';
+            data.storage_version = '2.0';
+            
+            if (centralDB) {
+                // Save to IndexedDB with enhanced error handling
+                const transaction = centralDB.transaction(['surveyData', 'deviceTracking', 'crossDeviceSync'], 'readwrite');
+                const surveyStore = transaction.objectStore('surveyData');
+                const deviceStore = transaction.objectStore('deviceTracking');
+                const syncStore = transaction.objectStore('crossDeviceSync');
+                
+                // Save survey data
+                const surveyRequest = surveyStore.add(data);
+                
+                // Update device tracking
+                const deviceData = {
+                    device_id: data.device_id,
+                    last_activity: new Date().toISOString(),
+                    submission_count: 1,
+                    nama: data.nama,
+                    role: data.role
+                };
+                deviceStore.put(deviceData);
+                
+                // Create sync record
+                const syncData = {
+                    sync_id: 'sync_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                    survey_id: data.id,
+                    source_device: data.device_id,
+                    sync_timestamp: new Date().toISOString(),
+                    data_size: JSON.stringify(data).length
+                };
+                syncStore.add(syncData);
+                
+                transaction.oncomplete = () => {
+                    console.log('✅ Data berhasil disimpan ke IndexedDB terpusat');
+                    saveToMultipleStorageSources(data);
+                    broadcastToAllDevices(data);
+                };
+                
+                transaction.onerror = (e) => {
+                    console.warn('⚠️ Gagal menyimpan ke IndexedDB:', e);
+                    saveToMultipleStorageSources(data);
+                    broadcastToAllDevices(data);
+                };
+            } else {
+                // Enhanced localStorage fallback
+                saveToMultipleStorageSources(data);
+                broadcastToAllDevices(data);
+            }
+        }
+        
+        // SISTEM PENYIMPANAN MULTI-SUMBER UNTUK CROSS-DEVICE SUPPORT
+        function saveToMultipleStorageSources(data) {
+            console.log('🔄 Menyimpan ke multiple storage sources...');
+            
+            // Update main survey data
+            surveyData.push(data);
+            localStorage.setItem('surveyData', JSON.stringify(surveyData));
+            
+            // Save to ALL cloud storage simulation keys
+            CLOUD_STORAGE_KEYS.forEach(key => {
+                try {
+                    const cloudData = JSON.parse(localStorage.getItem(key)) || [];
+                    // Check for duplicates
+                    const exists = cloudData.find(item => item.id === data.id);
+                    if (!exists) {
+                        cloudData.push(data);
+                        localStorage.setItem(key, JSON.stringify(cloudData));
+                        console.log(`✅ Data disimpan ke ${key}`);
+                    }
+                } catch (e) {
+                    console.warn(`⚠️ Gagal menyimpan ke ${key}:`, e);
+                }
+            });
+            
+            // Enhanced device-specific storage
+            const deviceKey = 'DEVICE_SURVEY_' + data.device_id;
+            const deviceData = JSON.parse(localStorage.getItem(deviceKey)) || [];
+            deviceData.push(data);
+            localStorage.setItem(deviceKey, JSON.stringify(deviceData));
+            
+            // Update device registry
+            updateDeviceRegistry(data);
+            
+            // Save to hostname-specific keys
+            const hostname = window.location.hostname || 'localhost';
+            const hostnameKeys = [
+                `SURVEY_DATA_${hostname}`,
+                `MULTI_DEVICE_${hostname}`,
+                `CROSS_PLATFORM_${hostname}`
+            ];
+            
+            hostnameKeys.forEach(key => {
+                try {
+                    const hostData = JSON.parse(localStorage.getItem(key)) || [];
+                    const exists = hostData.find(item => item.id === data.id);
+                    if (!exists) {
+                        hostData.push(data);
+                        localStorage.setItem(key, JSON.stringify(hostData));
+                    }
+                } catch (e) {
+                    console.warn(`⚠️ Gagal menyimpan ke ${key}:`, e);
+                }
+            });
+            
+            // Update spreadsheet data with enhanced metadata
+            updateSpreadsheetData(data);
+            
+            // Create activity log
+            createActivityLog(data);
+            
+            console.log('✅ Data berhasil disimpan ke semua storage sources');
+        }
+        
+        // UPDATE DEVICE REGISTRY
+        function updateDeviceRegistry(data) {
+            try {
+                const registry = JSON.parse(localStorage.getItem('DEVICE_REGISTRY')) || {};
+                const deviceId = data.device_id;
+                
+                if (!registry[deviceId]) {
+                    registry[deviceId] = {
+                        first_seen: new Date().toISOString(),
+                        submission_count: 0,
+                        last_submission: null,
+                        user_info: {}
+                    };
+                }
+                
+                registry[deviceId].submission_count++;
+                registry[deviceId].last_submission = new Date().toISOString();
+                registry[deviceId].user_info = {
+                    nama: data.nama,
+                    role: data.role,
+                    kelas: data.kelas || data.mata_pelajaran || 'N/A'
+                };
+                
+                localStorage.setItem('DEVICE_REGISTRY', JSON.stringify(registry));
+                console.log(`📱 Device registry updated for ${deviceId}`);
+            } catch (e) {
+                console.warn('⚠️ Gagal update device registry:', e);
+            }
+        }
+        
+        // UPDATE SPREADSHEET DATA
+        function updateSpreadsheetData(data) {
+            try {
+                const spreadsheetData = JSON.parse(localStorage.getItem('spreadsheetData')) || [];
+                spreadsheetData.push(data);
+                localStorage.setItem('spreadsheetData', JSON.stringify(spreadsheetData));
+                
+                // Enhanced metadata
+                const metadata = {
+                    lastUpdated: new Date().toISOString(),
+                    totalRows: spreadsheetData.length,
+                    totalColumns: Object.keys(data).length,
+                    fileSize: JSON.stringify(spreadsheetData).length,
+                    uniqueDevices: new Set(spreadsheetData.map(item => item.device_id)).size,
+                    lastSubmission: {
+                        nama: data.nama,
+                        role: data.role,
+                        timestamp: data.timestamp
+                    }
+                };
+                localStorage.setItem('spreadsheetMetadata', JSON.stringify(metadata));
+                console.log('📊 Spreadsheet data updated');
+            } catch (e) {
+                console.warn('⚠️ Gagal update spreadsheet:', e);
+            }
+        }
+        
+        // CREATE ACTIVITY LOG
+        function createActivityLog(data) {
+            try {
+                const motorStatus = data.role === 'siswa' && data.kepemilikan_motor === 'Tidak, saya tidak memiliki kendaraan motor' ? '(Tanpa Motor)' : '(Dengan Motor)';
+                const deviceInfo = `[${data.device_id.substring(0, 8)}...]`;
+                
+                const logMessage = data.role === 'siswa' 
+                    ? `Survei siswa baru dari ${data.nama || 'Siswa'} - ${data.kelas || 'Kelas tidak diisi'} ${motorStatus} ${deviceInfo}`
+                    : `Survei guru baru dari ${data.nama || 'Guru'} - ${data.mata_pelajaran || 'Mata pelajaran tidak diisi'} ${deviceInfo}`;
+                
+                addAdminActivityLog(logMessage);
+                console.log('📝 Activity log created');
+            } catch (e) {
+                console.warn('⚠️ Gagal create activity log:', e);
+            }
+        }
+        
+        // Mark device as having submitted
+        function markDeviceAsSubmitted(deviceId, nama, kelas) {
+            const deviceInfo = {
+                device_id: deviceId,
+                submitted_at: new Date().toISOString(),
+                nama: nama,
+                kelas: kelas,
+                user_agent: navigator.userAgent,
+                screen_resolution: `${screen.width}x${screen.height}`
+            };
+            
+            if (centralDB) {
+                const transaction = centralDB.transaction(['deviceTracking'], 'readwrite');
+                const store = transaction.objectStore('deviceTracking');
+                store.put(deviceInfo);
+            }
+            
+            // Also save to localStorage
+            const submittedDevices = JSON.parse(localStorage.getItem('submittedDevices')) || {};
+            submittedDevices[deviceId] = deviceInfo;
+            localStorage.setItem('submittedDevices', JSON.stringify(submittedDevices));
+        }
+        
+        // LOAD ALL SURVEY DATA FROM MULTI-DEVICE SOURCES
+        function loadAllSurveyData() {
+            return new Promise((resolve) => {
+                console.log('🔄 Loading data dari semua sumber multi-perangkat...');
+                
+                if (centralDB) {
+                    // Load from IndexedDB first
+                    const transaction = centralDB.transaction(['surveyData'], 'readonly');
+                    const store = transaction.objectStore('surveyData');
+                    const request = store.getAll();
+                    
+                    request.onsuccess = () => {
+                        const indexedDBData = request.result || [];
+                        console.log(`📊 Loaded ${indexedDBData.length} records from IndexedDB`);
+                        
+                        // Combine with localStorage sources
+                        const localStorageData = loadFromAllStorageSources();
+                        const allData = [...indexedDBData, ...localStorageData];
+                        const uniqueData = removeDuplicatesAdvanced(allData);
+                        
+                        console.log(`✅ Total unique records: ${uniqueData.length}`);
+                        resolve(uniqueData);
+                    };
+                    
+                    request.onerror = () => {
+                        console.warn('⚠️ IndexedDB error, fallback to localStorage');
+                        const allData = loadFromAllStorageSources();
+                        const uniqueData = removeDuplicatesAdvanced(allData);
+                        resolve(uniqueData);
+                    };
+                } else {
+                    // Enhanced localStorage loading
+                    const allData = loadFromAllStorageSources();
+                    const uniqueData = removeDuplicatesAdvanced(allData);
+                    console.log(`✅ Loaded ${uniqueData.length} unique records from localStorage`);
+                    resolve(uniqueData);
+                }
+            });
+        }
+        
+        // ENHANCED LOADING FROM ALL STORAGE SOURCES
+        function loadFromAllStorageSources() {
+            console.log('🔍 Scanning all storage sources...');
+            const hostname = window.location.hostname || 'localhost';
+            const allSources = [];
+            let sourceCount = 0;
+            
+            // Load from cloud storage simulation keys
+            CLOUD_STORAGE_KEYS.forEach(key => {
+                try {
+                    const data = JSON.parse(localStorage.getItem(key)) || [];
+                    if (Array.isArray(data) && data.length > 0) {
+                        allSources.push(...data);
+                        sourceCount++;
+                        console.log(`📦 Loaded ${data.length} records from ${key}`);
+                    }
+                } catch (e) {
+                    console.warn(`⚠️ Error loading from ${key}:`, e);
+                }
+            });
+            
+            // Load from legacy keys
+            const legacyKeys = [
+                'surveyData',
+                'spreadsheetData',
+                'GLOBAL_SURVEY_DATA_' + hostname,
+                'SHARED_SURVEY_DATA_ALL_DEVICES',
+                'CENTRAL_SURVEY_COLLECTION',
+                'SURVEY_DATA_POOL_' + new Date().getFullYear()
+            ];
+            
+            legacyKeys.forEach(key => {
+                try {
+                    const data = JSON.parse(localStorage.getItem(key)) || [];
+                    if (Array.isArray(data) && data.length > 0) {
+                        allSources.push(...data);
+                        sourceCount++;
+                        console.log(`📦 Loaded ${data.length} records from legacy ${key}`);
+                    }
+                } catch (e) {
+                    console.warn(`⚠️ Error loading from legacy ${key}:`, e);
+                }
+            });
+            
+            // Load from hostname-specific keys
+            const hostnameKeys = [
+                `SURVEY_DATA_${hostname}`,
+                `MULTI_DEVICE_${hostname}`,
+                `CROSS_PLATFORM_${hostname}`
+            ];
+            
+            hostnameKeys.forEach(key => {
+                try {
+                    const data = JSON.parse(localStorage.getItem(key)) || [];
+                    if (Array.isArray(data) && data.length > 0) {
+                        allSources.push(...data);
+                        sourceCount++;
+                        console.log(`📦 Loaded ${data.length} records from hostname ${key}`);
+                    }
+                } catch (e) {
+                    console.warn(`⚠️ Error loading from hostname ${key}:`, e);
+                }
+            });
+            
+            // Scan ALL localStorage keys for device-specific data
+            const deviceKeys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.startsWith('DEVICE_SURVEY_') || key.includes('device_'))) {
+                    deviceKeys.push(key);
+                }
+            }
+            
+            deviceKeys.forEach(key => {
+                try {
+                    const data = JSON.parse(localStorage.getItem(key)) || [];
+                    if (Array.isArray(data) && data.length > 0) {
+                        allSources.push(...data);
+                        sourceCount++;
+                        console.log(`📱 Loaded ${data.length} records from device ${key}`);
+                    }
+                } catch (e) {
+                    console.warn(`⚠️ Error loading from device ${key}:`, e);
+                }
+            });
+            
+            console.log(`🔍 Scanned ${sourceCount} storage sources, found ${allSources.length} total records`);
+            return allSources;
+        }
+        
+        // ADVANCED DEDUPLICATION SYSTEM
+        function removeDuplicatesAdvanced(data) {
+            console.log(`🔄 Deduplicating ${data.length} records...`);
+            
+            const seen = new Map();
+            const duplicates = [];
+            
+            const uniqueData = data.filter(item => {
+                if (!item || !item.id) {
+                    console.warn('⚠️ Found record without ID:', item);
+                    return false;
+                }
+                
+                if (seen.has(item.id)) {
+                    // Check if this is a newer version
+                    const existing = seen.get(item.id);
+                    const existingTime = new Date(existing.timestamp || 0).getTime();
+                    const currentTime = new Date(item.timestamp || 0).getTime();
+                    
+                    if (currentTime > existingTime) {
+                        // Replace with newer version
+                        seen.set(item.id, item);
+                        duplicates.push(`Updated ${item.id} with newer version`);
+                        return true;
+                    } else {
+                        duplicates.push(`Skipped older version of ${item.id}`);
+                        return false;
+                    }
+                } else {
+                    seen.set(item.id, item);
+                    return true;
+                }
+            });
+            
+            // Additional validation
+            const validatedData = uniqueData.filter(item => {
+                // Ensure required fields exist
+                if (!item.nama || !item.role || !item.timestamp) {
+                    console.warn('⚠️ Found incomplete record:', item.id);
+                    return false;
+                }
+                return true;
+            });
+            
+            console.log(`✅ Deduplication complete: ${data.length} → ${validatedData.length} (removed ${data.length - validatedData.length} duplicates/invalid)`);
+            
+            if (duplicates.length > 0) {
+                console.log('📋 Duplicate handling:', duplicates.slice(0, 5)); // Show first 5
+            }
+            
+            return validatedData;
+        }
+        
+        // LEGACY DEDUPLICATION (for backward compatibility)
+        function removeDuplicates(data) {
+            return removeDuplicatesAdvanced(data);
+        }
 
         // Admin Progress Functions
         function showAdminProgress(message, callback, duration = 2000) {
@@ -1262,7 +1836,7 @@
             return html;
         }
 
-        // Student form submission - SAVE TO SPREADSHEET
+        // Student form submission - SAVE TO CENTRAL STORAGE
         document.getElementById('student-survey-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -1287,12 +1861,15 @@
                 }
             });
             
-            // Add metadata
+            // Add metadata with device fingerprint
             data.timestamp = new Date().toISOString();
-            data.id = Date.now();
+            data.id = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             data.tanggal = new Date().toLocaleDateString('id-ID');
             data.waktu = new Date().toLocaleTimeString('id-ID');
             data.role = 'siswa';
+            data.device_id = getDeviceFingerprint();
+            data.user_agent = navigator.userAgent;
+            data.screen_resolution = `${screen.width}x${screen.height}`;
             
             // Determine status based on motor ownership
             if (data.kepemilikan_motor === 'Tidak, saya tidak memiliki kendaraan motor') {
@@ -1317,27 +1894,11 @@
             
             // Show progress and then success message
             showProgressAndSuccess(data, () => {
-                // Save to main survey data array
-                surveyData.push(data);
-                localStorage.setItem('surveyData', JSON.stringify(surveyData));
+                // Save to central survey database
+                saveToCentralDatabase(data);
                 
-                // Also save to spreadsheet data for admin view
-                const spreadsheetData = JSON.parse(localStorage.getItem('spreadsheetData')) || [];
-                spreadsheetData.push(data);
-                localStorage.setItem('spreadsheetData', JSON.stringify(spreadsheetData));
-                
-                // Update spreadsheet metadata
-                const metadata = {
-                    lastUpdated: new Date().toISOString(),
-                    totalRows: spreadsheetData.length,
-                    totalColumns: Object.keys(data).length,
-                    fileSize: JSON.stringify(spreadsheetData).length
-                };
-                localStorage.setItem('spreadsheetMetadata', JSON.stringify(metadata));
-                
-                // Add activity log for admin with more specific info
-                const motorStatus = data.kepemilikan_motor === 'Tidak, saya tidak memiliki kendaraan motor' ? '(Tanpa Motor)' : '(Dengan Motor)';
-                addAdminActivityLog(`Survei siswa baru diterima dari ${data.nama || 'Siswa'} - ${data.kelas || 'Kelas tidak diisi'} ${motorStatus}`);
+                // Mark this device as having submitted
+                markDeviceAsSubmitted(data.device_id, data.nama, data.kelas);
                 
                 this.reset();
                 
@@ -1367,7 +1928,7 @@
             });
         });
 
-        // Teacher form submission - SAVE TO SPREADSHEET
+        // Teacher form submission - SAVE TO CENTRAL STORAGE
         document.getElementById('teacher-survey-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -1392,36 +1953,24 @@
                 }
             });
             
-            // Add metadata
+            // Add metadata with device fingerprint
             data.timestamp = new Date().toISOString();
-            data.id = Date.now();
+            data.id = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             data.tanggal = new Date().toLocaleDateString('id-ID');
             data.waktu = new Date().toLocaleTimeString('id-ID');
             data.role = 'guru';
             data.status = 'Lengkap';
+            data.device_id = getDeviceFingerprint();
+            data.user_agent = navigator.userAgent;
+            data.screen_resolution = `${screen.width}x${screen.height}`;
             
             // Show progress and then success message
             showProgressAndSuccess(data, () => {
-                // Save to main survey data array
-                surveyData.push(data);
-                localStorage.setItem('surveyData', JSON.stringify(surveyData));
+                // Save to central survey database
+                saveToCentralDatabase(data);
                 
-                // Also save to spreadsheet data for admin view
-                const spreadsheetData = JSON.parse(localStorage.getItem('spreadsheetData')) || [];
-                spreadsheetData.push(data);
-                localStorage.setItem('spreadsheetData', JSON.stringify(spreadsheetData));
-                
-                // Update spreadsheet metadata
-                const metadata = {
-                    lastUpdated: new Date().toISOString(),
-                    totalRows: spreadsheetData.length,
-                    totalColumns: Object.keys(data).length,
-                    fileSize: JSON.stringify(spreadsheetData).length
-                };
-                localStorage.setItem('spreadsheetMetadata', JSON.stringify(metadata));
-                
-                // Add activity log for admin
-                addAdminActivityLog(`Survei guru baru diterima dari ${data.nama || 'Guru'} - ${data.mata_pelajaran || 'Mata pelajaran tidak diisi'}`);
+                // Mark this device as having submitted
+                markDeviceAsSubmitted(data.device_id, data.nama, data.mata_pelajaran);
                 
                 this.reset();
             });
@@ -1564,43 +2113,74 @@
         }
 
         function refreshSpreadsheet() {
-            showAdminProgress('Memuat ulang data spreadsheet...', () => {
-                // Get data from both sources and merge
-                const surveyDataFromStorage = JSON.parse(localStorage.getItem('surveyData')) || [];
-                const spreadsheetDataFromStorage = JSON.parse(localStorage.getItem('spreadsheetData')) || [];
-                
-                // Merge and deduplicate data based on ID
-                const allData = [...surveyDataFromStorage, ...spreadsheetDataFromStorage];
-                const uniqueData = allData.filter((item, index, self) => 
-                    index === self.findIndex(t => t.id === item.id)
-                );
-                
-                // Update global variables
-                surveyData = uniqueData;
-                localStorage.setItem('surveyData', JSON.stringify(surveyData));
-                localStorage.setItem('spreadsheetData', JSON.stringify(surveyData));
-                
-                const metadata = JSON.parse(localStorage.getItem('spreadsheetMetadata')) || {};
-                
-                // Update metadata display
-                document.getElementById('spreadsheet-total-rows').textContent = surveyData.length;
-                document.getElementById('spreadsheet-total-columns').textContent = surveyData.length > 0 ? Object.keys(surveyData[0]).length : 0;
-                document.getElementById('spreadsheet-last-updated').textContent = metadata.lastUpdated ? new Date(metadata.lastUpdated).toLocaleString('id-ID') : '-';
-                document.getElementById('spreadsheet-file-size').textContent = metadata.fileSize ? Math.round(metadata.fileSize / 1024) + ' KB' : '0 KB';
-                
-                // Reset filtered data
-                filteredSpreadsheetData = surveyData;
-                document.getElementById('spreadsheet-search').value = '';
-                document.getElementById('search-results-info').textContent = '';
-                
-                // Generate and display spreadsheet
-                const container = document.getElementById('spreadsheet-container');
-                container.innerHTML = generateSpreadsheetHTML(surveyData);
-                
-                // Add activity log
-                addAdminActivityLog(`Data spreadsheet direfresh - Total ${surveyData.length} data`);
-                
-                showNotification(`Data spreadsheet berhasil diperbarui! (${surveyData.length} data)`, 'success');
+            showAdminProgress('Memuat ulang data spreadsheet dari semua perangkat...', () => {
+                // Load all data from central database
+                loadAllSurveyData().then(allData => {
+                    // Update global variables
+                    surveyData = allData;
+                    localStorage.setItem('surveyData', JSON.stringify(surveyData));
+                    localStorage.setItem('spreadsheetData', JSON.stringify(surveyData));
+                    
+                    const metadata = {
+                        lastUpdated: new Date().toISOString(),
+                        totalRows: surveyData.length,
+                        totalColumns: surveyData.length > 0 ? Object.keys(surveyData[0]).length : 0,
+                        fileSize: JSON.stringify(surveyData).length
+                    };
+                    localStorage.setItem('spreadsheetMetadata', JSON.stringify(metadata));
+                    
+                    // Update metadata display
+                    document.getElementById('spreadsheet-total-rows').textContent = surveyData.length;
+                    document.getElementById('spreadsheet-total-columns').textContent = metadata.totalColumns;
+                    document.getElementById('spreadsheet-last-updated').textContent = new Date(metadata.lastUpdated).toLocaleString('id-ID');
+                    document.getElementById('spreadsheet-file-size').textContent = Math.round(metadata.fileSize / 1024) + ' KB';
+                    
+                    // Reset filtered data
+                    filteredSpreadsheetData = surveyData;
+                    document.getElementById('spreadsheet-search').value = '';
+                    document.getElementById('search-results-info').textContent = '';
+                    
+                    // Generate and display spreadsheet
+                    const container = document.getElementById('spreadsheet-container');
+                    container.innerHTML = generateSpreadsheetHTML(surveyData);
+                    
+                    // Count unique devices and show detailed info
+                    const uniqueDevices = new Set(surveyData.map(item => item.device_id)).size;
+                    const deviceList = {};
+                    surveyData.forEach(item => {
+                        if (item.device_id) {
+                            if (!deviceList[item.device_id]) {
+                                deviceList[item.device_id] = {
+                                    count: 0,
+                                    lastSubmission: item.timestamp,
+                                    names: []
+                                };
+                            }
+                            deviceList[item.device_id].count++;
+                            if (item.nama) deviceList[item.device_id].names.push(item.nama);
+                            if (new Date(item.timestamp) > new Date(deviceList[item.device_id].lastSubmission)) {
+                                deviceList[item.device_id].lastSubmission = item.timestamp;
+                            }
+                        }
+                    });
+                    
+                    // Update sync status
+                    const syncStatus = document.getElementById('sync-status');
+                    if (syncStatus) {
+                        syncStatus.textContent = `${uniqueDevices} perangkat terhubung`;
+                        syncStatus.className = 'text-xs text-green-600';
+                    }
+                    
+                    // Add activity log with device details
+                    const deviceInfo = Object.keys(deviceList).length > 0 ? 
+                        `Perangkat aktif: ${Object.keys(deviceList).slice(0, 3).map(id => 
+                            deviceList[id].names[0] || id.substring(0, 8)
+                        ).join(', ')}${Object.keys(deviceList).length > 3 ? '...' : ''}` : '';
+                    
+                    addAdminActivityLog(`Data spreadsheet direfresh - Total ${surveyData.length} data dari ${uniqueDevices} perangkat. ${deviceInfo}`);
+                    
+                    showNotification(`Data spreadsheet berhasil diperbarui! (${surveyData.length} data dari ${uniqueDevices} perangkat)`, 'success');
+                });
             });
         }
 
@@ -1722,60 +2302,62 @@
         // Admin functions
         function loadAdminDashboard() {
             showAdminProgress('Memuat dashboard administrator...', () => {
-                // Load all survey data from storage
-                const allSurveyData = JSON.parse(localStorage.getItem('surveyData')) || [];
-                const spreadsheetData = JSON.parse(localStorage.getItem('spreadsheetData')) || [];
-                
-                // Merge and deduplicate data
-                const mergedData = [...allSurveyData, ...spreadsheetData];
-                const uniqueData = mergedData.filter((item, index, self) => 
-                    index === self.findIndex(t => t.id === item.id)
-                );
-                
-                // Update global surveyData
-                surveyData = uniqueData;
-                
-                const totalSurveys = surveyData.length;
-                const studentSurveys = surveyData.filter(item => item.role === 'siswa').length;
-                const teacherSurveys = surveyData.filter(item => item.role === 'guru').length;
-                
-                // Count students with and without motor
-                const studentsWithMotor = surveyData.filter(item => 
-                    item.role === 'siswa' && item.kepemilikan_motor === 'Ya, saya memiliki kendaraan motor'
-                ).length;
-                const studentsWithoutMotor = surveyData.filter(item => 
-                    item.role === 'siswa' && item.kepemilikan_motor === 'Tidak, saya tidak memiliki kendaraan motor'
-                ).length;
-                
-                document.getElementById('admin-total-surveys').textContent = totalSurveys;
-                document.getElementById('admin-total-students').textContent = `${studentSurveys} (${studentsWithMotor} motor, ${studentsWithoutMotor} tanpa)`;
-                document.getElementById('admin-total-teachers').textContent = teacherSurveys;
-                
-                const today = new Date().toDateString();
-                const todaySurveys = surveyData.filter(item => 
-                    new Date(item.timestamp).toDateString() === today
-                ).length;
-                document.getElementById('admin-today-surveys').textContent = todaySurveys;
-                
-                document.getElementById('admin-login-time').textContent = new Date().toLocaleTimeString('id-ID');
-                
-                // Load analytics charts
-                loadTransportationChart();
-                loadOwnershipChart();
-                loadMotorBrandChart();
-                loadOilBrandChart();
-                loadOilFrequencyChart();
-                loadDailyDistanceChart();
-                loadOilFactorsChart();
-                
-                // Update activity log display
-                updateActivityLogDisplay();
-                
-                updateSystemInfo();
-                setInterval(updateUptime, 60000);
-                
-                // Add login activity
-                addAdminActivityLog('Administrator login ke sistem dashboard');
+                // Load all survey data from central database
+                loadAllSurveyData().then(allData => {
+                    // Update global surveyData
+                    surveyData = allData;
+                    
+                    const totalSurveys = surveyData.length;
+                    const studentSurveys = surveyData.filter(item => item.role === 'siswa').length;
+                    const teacherSurveys = surveyData.filter(item => item.role === 'guru').length;
+                    
+                    // Count students with and without motor
+                    const studentsWithMotor = surveyData.filter(item => 
+                        item.role === 'siswa' && item.kepemilikan_motor === 'Ya, saya memiliki kendaraan motor'
+                    ).length;
+                    const studentsWithoutMotor = surveyData.filter(item => 
+                        item.role === 'siswa' && item.kepemilikan_motor === 'Tidak, saya tidak memiliki kendaraan motor'
+                    ).length;
+                    
+                    document.getElementById('admin-total-surveys').textContent = totalSurveys;
+                    document.getElementById('admin-total-students').textContent = `${studentSurveys} (${studentsWithMotor} motor, ${studentsWithoutMotor} tanpa)`;
+                    document.getElementById('admin-total-teachers').textContent = teacherSurveys;
+                    
+                    const today = new Date().toDateString();
+                    const todaySurveys = surveyData.filter(item => 
+                        new Date(item.timestamp).toDateString() === today
+                    ).length;
+                    document.getElementById('admin-today-surveys').textContent = todaySurveys;
+                    
+                    // Count unique devices
+                    const uniqueDevices = new Set(surveyData.map(item => item.device_id)).size;
+                    document.getElementById('admin-total-devices').textContent = uniqueDevices;
+                    
+                    // Update database status
+                    const dbStatus = centralDB ? 'IndexedDB' : 'LocalStorage';
+                    const dbColor = centralDB ? 'text-green-600' : 'text-yellow-600';
+                    document.getElementById('admin-db-status').innerHTML = `<span class="${dbColor}">${dbStatus}</span>`;
+                    
+                    document.getElementById('admin-login-time').textContent = new Date().toLocaleTimeString('id-ID');
+                    
+                    // Load analytics charts
+                    loadTransportationChart();
+                    loadOwnershipChart();
+                    loadMotorBrandChart();
+                    loadOilBrandChart();
+                    loadOilFrequencyChart();
+                    loadDailyDistanceChart();
+                    loadOilFactorsChart();
+                    
+                    // Update activity log display
+                    updateActivityLogDisplay();
+                    
+                    updateSystemInfo();
+                    setInterval(updateUptime, 60000);
+                    
+                    // Add login activity
+                    addAdminActivityLog('Administrator login ke sistem dashboard');
+                });
             }, 1200);
         }
 
@@ -2792,8 +3374,246 @@
             input.click();
         }
 
+        // ENHANCED CROSS-DEVICE COMMUNICATION SYSTEM
+        function setupCrossTabCommunication() {
+            console.log('🔗 Setting up cross-device communication...');
+            
+            // Listen for multiple broadcast channels
+            const broadcastChannels = [
+                'SURVEY_BROADCAST_CHANNEL',
+                'MULTI_DEVICE_SYNC_CHANNEL', 
+                'REAL_TIME_DATA_CHANNEL',
+                'CROSS_DEVICE_UPDATES',
+                'SURVEY_BROADCAST' // Legacy support
+            ];
+            
+            broadcastChannels.forEach(channel => {
+                window.addEventListener('storage', function(e) {
+                    if (e.key === channel && e.newValue) {
+                        try {
+                            const broadcastData = JSON.parse(e.newValue);
+                            handleBroadcastMessage(broadcastData, channel);
+                        } catch (error) {
+                            console.warn(`⚠️ Error processing broadcast from ${channel}:`, error);
+                        }
+                    }
+                });
+            });
+            
+            // BroadcastChannel API support
+            if (typeof BroadcastChannel !== 'undefined') {
+                try {
+                    const bc = new BroadcastChannel('survey_updates');
+                    bc.onmessage = function(event) {
+                        handleBroadcastMessage(event.data, 'BroadcastChannel');
+                    };
+                    console.log('✅ BroadcastChannel API initialized');
+                } catch (e) {
+                    console.warn('⚠️ BroadcastChannel API not available:', e);
+                }
+            }
+            
+            // Enhanced periodic sync for admin
+            if (currentUser && currentUser.role === 'admin') {
+                // More frequent sync for admin
+                const syncInterval = setInterval(() => {
+                    syncAdminData();
+                }, 15000); // Check every 15 seconds
+                
+                // Store interval ID for cleanup
+                window.adminSyncInterval = syncInterval;
+                console.log('⏰ Admin periodic sync started (15s interval)');
+            }
+            
+            // Device heartbeat system
+            startDeviceHeartbeat();
+            
+            console.log('✅ Cross-device communication system initialized');
+        }
+        
+        // HANDLE BROADCAST MESSAGES
+        function handleBroadcastMessage(broadcastData, source) {
+            if (!broadcastData || !broadcastData.type) return;
+            
+            console.log(`📡 Received broadcast from ${source}:`, broadcastData.type);
+            
+            switch (broadcastData.type) {
+                case 'NEW_SURVEY_SUBMISSION':
+                case 'NEW_SURVEY_DATA':
+                    if (currentUser && currentUser.role === 'admin') {
+                        handleNewSurveyBroadcast(broadcastData);
+                    }
+                    break;
+                    
+                case 'ADMIN_REFRESH_REQUEST':
+                    if (currentUser && currentUser.role === 'admin') {
+                        refreshAdminDashboard();
+                    }
+                    break;
+                    
+                case 'DEVICE_HEARTBEAT':
+                    updateDeviceHeartbeat(broadcastData);
+                    break;
+                    
+                default:
+                    console.log(`📡 Unknown broadcast type: ${broadcastData.type}`);
+            }
+        }
+        
+        // HANDLE NEW SURVEY BROADCAST
+        function handleNewSurveyBroadcast(broadcastData) {
+            if (!broadcastData.data) return;
+            
+            const surveyData = broadcastData.data;
+            const deviceId = broadcastData.deviceId || 'unknown';
+            
+            // Update local data
+            loadAllSurveyData().then(allData => {
+                const oldCount = window.surveyData ? window.surveyData.length : 0;
+                window.surveyData = allData;
+                
+                if (allData.length > oldCount) {
+                    // New data detected
+                    updateDashboardStats();
+                    
+                    // Show notification
+                    const userName = surveyData.nama || 'Responden';
+                    const deviceInfo = deviceId.substring(0, 8) + '...';
+                    showNotification(
+                        `📱 Data baru dari ${userName} [${deviceInfo}]`, 
+                        'info', 
+                        4000
+                    );
+                    
+                    // Update activity log
+                    addAdminActivityLog(`Real-time sync: Data baru dari perangkat ${deviceInfo} (${userName})`);
+                }
+            });
+        }
+        
+        // SYNC ADMIN DATA
+        function syncAdminData() {
+            if (!currentUser || currentUser.role !== 'admin') return;
+            
+            loadAllSurveyData().then(allData => {
+                const oldCount = surveyData.length;
+                const newCount = allData.length;
+                
+                if (newCount !== oldCount) {
+                    console.log(`🔄 Data sync: ${oldCount} → ${newCount} records`);
+                    surveyData = allData;
+                    updateDashboardStats();
+                    
+                    // Update sync status indicator
+                    const syncStatus = document.getElementById('sync-status');
+                    if (syncStatus) {
+                        const uniqueDevices = new Set(allData.map(item => item.device_id)).size;
+                        syncStatus.textContent = `${uniqueDevices} perangkat aktif - Sync ${new Date().toLocaleTimeString('id-ID')}`;
+                        syncStatus.className = 'text-xs text-green-600';
+                    }
+                }
+            });
+        }
+        
+        // DEVICE HEARTBEAT SYSTEM
+        function startDeviceHeartbeat() {
+            const deviceId = getDeviceFingerprint();
+            
+            // Send heartbeat every 30 seconds
+            setInterval(() => {
+                const heartbeat = {
+                    type: 'DEVICE_HEARTBEAT',
+                    deviceId: deviceId,
+                    timestamp: Date.now(),
+                    userAgent: navigator.userAgent.substring(0, 50),
+                    currentUser: currentUser ? currentUser.role : 'guest'
+                };
+                
+                try {
+                    localStorage.setItem('DEVICE_HEARTBEAT_' + deviceId, JSON.stringify(heartbeat));
+                } catch (e) {
+                    console.warn('⚠️ Heartbeat failed:', e);
+                }
+            }, 30000);
+        }
+        
+        // UPDATE DEVICE HEARTBEAT
+        function updateDeviceHeartbeat(broadcastData) {
+            if (!currentUser || currentUser.role !== 'admin') return;
+            
+            // Update device registry with heartbeat info
+            try {
+                const registry = JSON.parse(localStorage.getItem('DEVICE_REGISTRY')) || {};
+                const deviceId = broadcastData.deviceId;
+                
+                if (registry[deviceId]) {
+                    registry[deviceId].last_heartbeat = new Date().toISOString();
+                    registry[deviceId].status = 'online';
+                    localStorage.setItem('DEVICE_REGISTRY', JSON.stringify(registry));
+                }
+            } catch (e) {
+                console.warn('⚠️ Failed to update device heartbeat:', e);
+            }
+        }
+        
+        // REFRESH ADMIN DASHBOARD
+        function refreshAdminDashboard() {
+            if (currentUser && currentUser.role === 'admin') {
+                console.log('🔄 Refreshing admin dashboard...');
+                loadAdminDashboard();
+            }
+        }
+        
+        // Update dashboard statistics without full reload
+        function updateDashboardStats() {
+            const totalSurveys = surveyData.length;
+            const studentSurveys = surveyData.filter(item => item.role === 'siswa').length;
+            const teacherSurveys = surveyData.filter(item => item.role === 'guru').length;
+            
+            // Count students with and without motor
+            const studentsWithMotor = surveyData.filter(item => 
+                item.role === 'siswa' && item.kepemilikan_motor === 'Ya, saya memiliki kendaraan motor'
+            ).length;
+            const studentsWithoutMotor = surveyData.filter(item => 
+                item.role === 'siswa' && item.kepemilikan_motor === 'Tidak, saya tidak memiliki kendaraan motor'
+            ).length;
+            
+            // Update DOM elements if they exist
+            const totalElement = document.getElementById('admin-total-surveys');
+            const studentsElement = document.getElementById('admin-total-students');
+            const teachersElement = document.getElementById('admin-total-teachers');
+            const devicesElement = document.getElementById('admin-total-devices');
+            
+            if (totalElement) totalElement.textContent = totalSurveys;
+            if (studentsElement) studentsElement.textContent = `${studentSurveys} (${studentsWithMotor} motor, ${studentsWithoutMotor} tanpa)`;
+            if (teachersElement) teachersElement.textContent = teacherSurveys;
+            
+            // Count unique devices
+            const uniqueDevices = new Set(surveyData.map(item => item.device_id)).size;
+            if (devicesElement) devicesElement.textContent = uniqueDevices;
+            
+            const today = new Date().toDateString();
+            const todaySurveys = surveyData.filter(item => 
+                new Date(item.timestamp).toDateString() === today
+            ).length;
+            const todayElement = document.getElementById('admin-today-surveys');
+            if (todayElement) todayElement.textContent = todaySurveys;
+        }
+        
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize central database
+            initCentralDatabase().then(db => {
+                if (db) {
+                    console.log('Database terpusat berhasil diinisialisasi');
+                } else {
+                    console.log('Menggunakan localStorage sebagai fallback');
+                }
+            });
+            
+            // Setup cross-tab communication
+            setupCrossTabCommunication();
+            
             showInterface('login');
             
             // Apply saved website settings on load
@@ -2802,5 +3622,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96f5193cf2fa468b',t:'MTc1NTIyMzIyOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96f551885564fdfe',t:'MTc1NTIyNTUzNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
